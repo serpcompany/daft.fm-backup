@@ -14,6 +14,12 @@ Follow these rules religiously to maintain code quality and avoid common pitfall
 - **Components over pages** - Build reusable, testable components
 - **Single responsibility** - Each function/component should do one thing well
 
+## UI/Styling Standards
+- **Native components first** - Use Nuxt UI Pro components and layouts without modification
+- **Component props over custom CSS** - Configure components via props and design tokens
+- **No custom styling** - Avoid writing custom CSS unless absolutely necessary
+- **Design system consistency** - Stick to built-in color schemes, spacing, and typography
+
 ## Performance Rules
 - **Images must be optimized** - Use Nuxt's built-in image optimization
 - **Lazy load by default** - Don't load data until needed
