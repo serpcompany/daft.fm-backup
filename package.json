@@ -9,17 +9,17 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "db:dbml": "drizzle-dbml-generator --schema=./server/database/schema.ts --out=./schema.dbml"
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@nuxt/ui-pro": "^3.3.0",
     "drizzle-orm": "^0.44.3",
+    "drizzle-zod": "^0.8.2",
     "nuxt": "^4.0.1",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "drizzle-dbml-generator": "^0.10.0",
     "drizzle-kit": "^0.31.4",
     "typescript": "^5.8.3",
     "vue-tsc": "^3.0.3"
