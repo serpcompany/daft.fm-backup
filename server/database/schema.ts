@@ -6,6 +6,7 @@ export const artists = sqliteTable('artists', {
   id: text('id').primaryKey(), // MusicBrainz ID (UUID)
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
+  urlSlug: text('url_slug').notNull().unique(), // Ranked slug for URLs (e.g., "justice", "justice-2")
   country: text('country'),
   formedYear: integer('formed_year'),
   genres: text('genres'), // JSON array stored as text

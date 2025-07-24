@@ -47,7 +47,27 @@ const data = computed((): (Artist | Album | Song)[] => {
 })
 
 function getItemUrl(item: Artist | Album | Song): string {
-  return `${props.urlPrefix}/${item.slug}-${item.id}`
+  // URL formats:
+  // artists/[urlSlug] (popularity-ranked: "justice", "justice-2", etc.)
+  // albums/[artist]-[album] 
+  // songs/[artist]-[song]
+  
+  if (props.urlPrefix === '/artists') {
+    const artistItem = item as Artist & {urlSlug: string}
+    return `${props.urlPrefix}/${artistItem.urlSlug || item.slug}`
+  } else if (props.urlPrefix === '/albums') {
+    // albums/[artist]-[album]
+    const albumItem = item as Album & {artistName: string}
+    const artistSlug = albumItem.artistName?.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-') || 'unknown'
+    return `${props.urlPrefix}/${artistSlug}-${item.slug}`
+  } else if (props.urlPrefix === '/songs') {
+    // songs/[artist]-[song]
+    const songItem = item as Song & {artistName: string}
+    const artistSlug = songItem.artistName?.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-') || 'unknown'
+    return `${props.urlPrefix}/${artistSlug}-${item.slug}`
+  }
+  
+  return `${props.urlPrefix}/${item.slug}`
 }
 
 function getItemDisplay(item: Artist | Album | Song): string {

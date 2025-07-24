@@ -92,6 +92,26 @@ export function parseArtistSlug(slug: string): { slug: string; mbid: string } | 
 }
 
 /**
+ * Parse artist slug with short ID
+ * Input: "daft-punk-056e4f3e" 
+ * Output: { slug: "daft-punk-056e4f3e", shortId: "056e4f3e" }
+ */
+export function parseArtistSlugShort(slug: string): { slug: string; shortId: string } | null {
+  // Split by dashes and check if last part looks like a short ID (8 hex chars)
+  const parts = slug.split('-');
+  const lastPart = parts[parts.length - 1];
+  
+  if (lastPart && /^[a-f0-9]{8}$/i.test(lastPart)) {
+    return {
+      slug,
+      shortId: lastPart
+    };
+  }
+  
+  return null;
+}
+
+/**
  * Parse album slug and extract MBID
  * Input: "daft-punk-discovery-47b83c38-8a0e-4d93-9a5b-5c52d4b82f7c"
  * Output: { slug: "...", mbid: "47b83c38-8a0e-4d93-9a5b-5c52d4b82f7c" }

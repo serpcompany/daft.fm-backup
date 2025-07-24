@@ -1,26 +1,16 @@
 // GET /api/artists/[slug] - Get artist by slug
 // URL format: /api/artists/daft-punk-056e4f3e-d505-4dad-8ec1-d04f521cbb56
 
-import { getArtistByMbid } from '../../lib/queries'
-import { parseArtistSlug } from '../../lib/urls'
+import { getArtistByUrlSlug } from '../../lib/queries'
 import { createDb } from '../../database/db'
 
 export default defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, 'slug')
+  const urlSlug = getRouterParam(event, 'slug')
   
-  if (!slug) {
+  if (!urlSlug) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Artist slug is required'
-    })
-  }
-
-  // Parse the MBID from the slug
-  const parsed = parseArtistSlug(slug)
-  if (!parsed) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid artist slug format'
+      statusMessage: 'Artist URL slug is required'
     })
   }
 
@@ -36,8 +26,8 @@ export default defineEventHandler(async (event) => {
   const db = createDb(d1)
 
   try {
-    // Get the artist from database
-    const artist = await getArtistByMbid(db, parsed.mbid)
+    // Get the artist from database by URL slug
+    const artist = await getArtistByUrlSlug(db, urlSlug)
     
     if (!artist) {
       throw createError({

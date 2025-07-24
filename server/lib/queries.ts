@@ -39,6 +39,26 @@ export async function getArtistByMbid(db: Database, mbid: string): Promise<Artis
   }
 }
 
+export async function getArtistBySlug(db: Database, slug: string): Promise<Artist | null> {
+  try {
+    const result = await db.select().from(artists).where(eq(artists.slug, slug)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error fetching artist by slug:', error);
+    return null;
+  }
+}
+
+export async function getArtistByUrlSlug(db: Database, urlSlug: string): Promise<Artist | null> {
+  try {
+    const result = await db.select().from(artists).where(eq(artists.urlSlug, urlSlug)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error fetching artist by URL slug:', error);
+    return null;
+  }
+}
+
 export async function getArtists(db: Database, limit = 50, offset = 0): Promise<Artist[]> {
   try {
     return await db.select().from(artists).orderBy(asc(artists.name)).limit(limit).offset(offset);
