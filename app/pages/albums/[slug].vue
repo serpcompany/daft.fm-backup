@@ -66,7 +66,7 @@
             <NuxtLink
               v-for="(song, index) in songs"
               :key="song.id"
-              :to="`/songs/${artist.slug}-${song.slug}`"
+              :to="`/song?artist=${artist.slug}&song=${song.slug}`"
               class="flex items-center gap-4 py-3 px-1 hover:bg-gray-50 transition-colors"
             >
               <span class="text-gray-500 w-8 text-right">{{ index + 1 }}</span>

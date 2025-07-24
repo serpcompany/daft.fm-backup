@@ -1,9 +1,10 @@
 <template>
   <UContainer class="py-8">
     <div v-if="pending">
-      <USkeleton class="h-8 w-1/2 mb-4" />
+      <USkeleton class="h-10 w-2/3 mb-4" />
       <USkeleton class="h-6 w-1/3 mb-8" />
-      <USkeleton class="h-64 w-full" />
+      <USkeleton class="h-64 w-full mb-4" />
+      <USkeleton class="h-96 w-full" />
     </div>
 
     <div v-else-if="error">
@@ -15,34 +16,36 @@
       />
     </div>
 
-    <div v-else-if="song">
+    <div v-else-if="song && artist">
       <!-- Song Header -->
       <div class="mb-8">
         <h1 class="text-4xl font-bold mb-2">{{ song.title }}</h1>
-        <div class="text-lg text-gray-600">
+        <p class="text-xl text-gray-600">
+          by 
           <NuxtLink 
-            v-if="artist" 
             :to="`/artists/${artist.slug}`"
             class="hover:underline"
           >
             {{ artist.name }}
           </NuxtLink>
-          <span v-if="album"> • </span>
-          <NuxtLink 
-            v-if="album && artist" 
-            :to="`/albums/${createSlug(artist.name)}-${album.slug}`"
-            class="hover:underline"
-          >
-            {{ album.title }}
-          </NuxtLink>
-        </div>
+          <span v-if="album">
+            on 
+            <NuxtLink 
+              :to="`/albums/${artist.slug}-${album.slug}`"
+              class="hover:underline"
+            >
+              {{ album.title }}
+            </NuxtLink>
+          </span>
+        </p>
       </div>
 
-      <!-- Song Details -->
-      <div class="grid gap-6">
+      <!-- Song Details Grid -->
+      <div class="grid gap-6 md:grid-cols-2">
         <!-- Basic Info -->
         <UCard>
-          <div class="grid gap-4">
+          <h2 class="text-2xl font-semibold mb-4">Song Information</h2>
+          <div class="space-y-4">
             <div v-if="song.duration">
               <h3 class="font-semibold mb-1">Duration</h3>
               <p>{{ formatDuration(song.duration) }}</p>
@@ -56,49 +59,45 @@
         </UCard>
 
         <!-- Artist Info -->
-        <UCard v-if="artistGenres.length > 0 || artist?.country || artist?.formedYear">
-          <h3 class="text-xl font-semibold mb-4">Artist Info</h3>
-          <div class="grid gap-4">
-            <div v-if="artistGenres.length > 0">
-              <h4 class="font-semibold mb-1">Genres</h4>
-              <div class="flex flex-wrap gap-2">
-                <span 
-                  v-for="genre in artistGenres" 
-                  :key="genre"
-                  class="px-2 py-1 bg-gray-100 rounded text-sm"
-                >
-                  {{ genre }}
-                </span>
-              </div>
-            </div>
-            
-            <div v-if="artist?.country">
-              <h4 class="font-semibold mb-1">Country</h4>
+        <UCard>
+          <h2 class="text-2xl font-semibold mb-4">Artist Information</h2>
+          <div class="space-y-4">
+            <div v-if="artist.country">
+              <h3 class="font-semibold mb-1">Country</h3>
               <p>{{ artist.country }}</p>
             </div>
             
-            <div v-if="artist?.formedYear">
-              <h4 class="font-semibold mb-1">Formed</h4>
+            <div v-if="artist.formedYear">
+              <h3 class="font-semibold mb-1">Formed</h3>
               <p>{{ artist.formedYear }}</p>
+            </div>
+            
+            <div v-if="artistGenres.length > 0">
+              <h3 class="font-semibold mb-1">Genres</h3>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <UBadge v-for="genre in artistGenres" :key="genre" variant="subtle">
+                  {{ genre }}
+                </UBadge>
+              </div>
             </div>
           </div>
         </UCard>
 
         <!-- Lyrics -->
-        <UCard v-if="song.lyrics">
-          <h3 class="text-xl font-semibold mb-4">Lyrics</h3>
+        <UCard v-if="song.lyrics" class="md:col-span-2">
+          <h2 class="text-2xl font-semibold mb-4">Lyrics</h2>
           <div class="whitespace-pre-wrap">{{ song.lyrics }}</div>
         </UCard>
 
         <!-- Annotations -->
-        <UCard v-if="song.annotations">
-          <h3 class="text-xl font-semibold mb-4">Annotations</h3>
+        <UCard v-if="song.annotations" class="md:col-span-2">
+          <h2 class="text-2xl font-semibold mb-4">Song Annotations</h2>
           <div class="prose max-w-none" v-html="song.annotations"></div>
         </UCard>
 
         <!-- External Links -->
-        <UCard v-if="externalLinks.length > 0">
-          <h3 class="text-xl font-semibold mb-4">Listen On</h3>
+        <UCard v-if="externalLinks.length > 0" class="md:col-span-2">
+          <h2 class="text-2xl font-semibold mb-4">Listen on</h2>
           <div class="flex flex-wrap gap-3">
             <UButton 
               v-for="link in externalLinks" 
@@ -128,22 +127,18 @@
 import type { Song, Artist, Album } from '~/server/types'
 
 const route = useRoute()
-const slug = route.params.slug as string
+const artistSlug = route.query.artist as string
+const songSlug = route.query.song as string
 
-// For song URLs like /songs/daft-punk-one-more-time
-// We need to parse out the artist and song slugs
-const parts = slug.split('-')
+if (!artistSlug || !songSlug) {
+  throw createError({
+    statusCode: 400,
+    statusMessage: 'Artist and song parameters are required',
+    fatal: true
+  })
+}
 
-// Try to find the best split - this is temporary
-// In production, URLs would include the ID: /songs/daft-punk-one-more-time-[id]
-let artistSlug = ''
-let songSlug = ''
-
-// For now, assume a simple 50/50 split
-const midpoint = Math.floor(parts.length / 2)
-artistSlug = parts.slice(0, midpoint).join('-')
-songSlug = parts.slice(midpoint).join('-')
-
+// Fetch song data using query params
 const { data, error, pending } = await useFetch('/api/songs/lookup', {
   query: {
     artist: artistSlug,
@@ -220,25 +215,14 @@ function formatDate(dateString: string | Date | number): string {
   })
 }
 
-function createSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .substring(0, 50) || 'item'
-}
-
 // Dynamic SEO meta tags
 useSeoMeta({
   title: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
   description: () => {
     if (!song.value || !artist.value) return 'Song information on Daft.fm'
-    const albumText = album.value ? ` from ${album.value.title}` : ''
+    const album = album.value ? ` from ${album.value.title}` : ''
     const duration = song.value.duration ? ` (${formatDuration(song.value.duration)})` : ''
-    return `Listen to ${song.value.title} by ${artist.value.name}${albumText}${duration}. Lyrics and song details on Daft.fm.`
+    return `Listen to ${song.value.title} by ${artist.value.name}${album}${duration}. Lyrics and song details on Daft.fm.`
   },
   ogTitle: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
   ogDescription: () => song.value && artist.value ? `Stream ${song.value.title} by ${artist.value.name} on Daft.fm` : 'Song information',
