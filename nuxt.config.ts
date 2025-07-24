@@ -9,5 +9,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   typescript: {
     typeCheck: true
+  },
+  nitro: {
+    modules: ['nitro-cloudflare-dev']
   }
 })
