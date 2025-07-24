@@ -10,7 +10,10 @@
       "WebFetch(domain:context7.com)",
       "WebFetch(domain:ui.nuxt.com)",
       "Bash(gh issue:*)",
-      "WebFetch(domain:nuxt.com)"
+      "WebFetch(domain:nuxt.com)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx wrangler d1 execute:*)"
     ],
     "deny": []
   }
