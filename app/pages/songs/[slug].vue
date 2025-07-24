@@ -144,12 +144,7 @@ const midpoint = Math.floor(parts.length / 2)
 artistSlug = parts.slice(0, midpoint).join('-')
 songSlug = parts.slice(midpoint).join('-')
 
-const { data, error, pending } = await useFetch('/api/songs/lookup', {
-  query: {
-    artist: artistSlug,
-    song: songSlug
-  }
-})
+const { data, error, pending } = await useFetch(`/api/songs/${slug}`)
 
 // Check for errors and throw with proper status code
 if (error.value) {

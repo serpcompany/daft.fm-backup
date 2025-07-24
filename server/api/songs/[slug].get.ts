@@ -1,9 +1,9 @@
-// GET /api/songs/[slug] - Get song by slug
-// URL format: /api/songs/daft-punk-one-more-time-s1a2b3c4-d5e6-7890-1234-567890abcdef
+// GET /api/songs/[slug] - Get song by compound slug
+// URL format: /api/songs/artist-slug-song-slug
 
-import { getSongByMbid, getArtistByMbid, getAlbumByMbid } from '../../lib/queries'
-import { parseSongSlug } from '../../lib/urls'
 import { createDb } from '../../database/db'
+import { and, eq } from 'drizzle-orm'
+import { songs, artists, albums } from '../../database/schema'
 
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')
@@ -15,15 +15,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Parse the MBID from the slug
-  const parsed = parseSongSlug(slug)
-  if (!parsed) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid song slug format'
-    })
-  }
-
+  // Parse compound slug - find the last hyphen to split artist and song
+  // This handles cases where artist or song names contain hyphens
+  const parts = slug.split('-')
+  
+  // Try different split points to find the correct artist/song combination
+  let artist = null
+  let song = null
+  let album = null
+  
   // Get D1 database instance from Cloudflare binding
   const d1 = event.context.cloudflare?.env?.DB
   if (!d1) {
@@ -36,29 +36,51 @@ export default defineEventHandler(async (event) => {
   const db = createDb(d1)
 
   try {
-    // Get the song from database
-    const song = await getSongByMbid(db, parsed.mbid)
+    // Try each possible split point
+    for (let i = 1; i < parts.length; i++) {
+      const artistSlug = parts.slice(0, i).join('-')
+      const songSlug = parts.slice(i).join('-')
+      
+      // First find the artist
+      const artistResults = await db.select().from(artists).where(eq(artists.slug, artistSlug)).limit(1)
+      
+      if (artistResults.length > 0) {
+        const foundArtist = artistResults[0]
+        
+        // Then find the song
+        const songResults = await db.select().from(songs)
+          .where(and(
+            eq(songs.artistId, foundArtist.id),
+            eq(songs.slug, songSlug)
+          ))
+          .limit(1)
+        
+        if (songResults.length > 0) {
+          artist = foundArtist
+          song = songResults[0]
+          break
+        }
+      }
+    }
     
-    if (!song) {
+    if (!artist || !song) {
       throw createError({
         statusCode: 404,
         statusMessage: 'Song not found'
       })
     }
-
-    // Also fetch the artist and album information
-    const [artist, album] = await Promise.all([
-      getArtistByMbid(db, song.artistId),
-      song.albumId ? getAlbumByMbid(db, song.albumId) : null
-    ])
     
-    if (!artist) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Artist not found for song'
-      })
+    // Fetch the album if the song has one
+    if (song.albumId) {
+      const albumResults = await db.select().from(albums)
+        .where(eq(albums.id, song.albumId))
+        .limit(1)
+      
+      if (albumResults.length > 0) {
+        album = albumResults[0]
+      }
     }
-
+    
     return {
       success: true,
       data: {
@@ -69,6 +91,12 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error) {
     console.error('Error fetching song:', error)
+    
+    // If it's already an error with a status code, re-throw it
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error
+    }
+    
     throw createError({
       statusCode: 500,
       statusMessage: 'Failed to fetch song'
