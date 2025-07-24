@@ -1,42 +1,75 @@
-# README
+# Nuxt Minimal Starter
 
-This project is to re-do the daft.fm music site.
+Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## Structure v1
+## Setup
 
-1. songs
-2. artists (bands, etc.)
-3. albums
+Make sure to install dependencies:
 
-### songs
+```bash
+# npm
+npm install
 
-- `https://daft.fm/songs/`
-- `https://daft.fm/songs/fatboy-slim-the-rockafeller-skank-15567180/`
+# pnpm
+pnpm install
 
-### albums
+# yarn
+yarn install
 
-- https://daft.fm/albums/
-- https://daft.fm/albums/yes-yes-51434/
+# bun
+bun install
+```
 
-### artists
+## Development Server
 
-- https://daft.fm/artists/
-- https://daft.fm/artists/phish-71/
+Start the development server on `http://localhost:3000`:
 
+```bash
+# npm
+npm run dev
 
-## Data source options
+# pnpm
+pnpm dev
 
-- Musicbrainz DB / API - https://musicbrainz.org/doc/MusicBrainz_API
-- genius api - https://docs.genius.com/
-- discogs api - https://www.discogs.com/developers/?ref=apilist.fun
-- whosampled api - https://www.whosampled.com/metadata/
-- rateyourmusic.com (web scraping)
+# yarn
+yarn dev
 
+# bun
+bun run dev
+```
 
-## Tech stack
+## Production
 
-- framework & component library: nuxt + nuxt UI (or) nextjs + shadcn
-- db: cloudflare d1
-- storage: cloudflare r2
-- orm: drizzle
-- typesafety: typescript
+Build the application for production:
+
+```bash
+# npm
+npm run build
+
+# pnpm
+pnpm build
+
+# yarn
+yarn build
+
+# bun
+bun run build
+```
+
+Locally preview production build:
+
+```bash
+# npm
+npm run preview
+
+# pnpm
+pnpm preview
+
+# yarn
+yarn preview
+
+# bun
+bun run preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.

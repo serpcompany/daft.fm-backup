@@ -6,7 +6,10 @@
       "Bash(curl:*)",
       "Bash(mv:*)",
       "Bash(mkdir:*)",
-      "Bash(ls)"
+      "Bash(ls)",
+      "WebFetch(domain:context7.com)",
+      "WebFetch(domain:ui.nuxt.com)",
+      "Bash(gh issue:*)"
     ],
     "deny": []
   }
