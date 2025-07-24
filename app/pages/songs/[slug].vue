@@ -19,7 +19,7 @@
       <!-- Song Header -->
       <div class="mb-8">
         <h1 class="text-4xl font-bold mb-2">{{ song.title }}</h1>
-        <div class="text-lg text-gray-600 dark:text-gray-400">
+        <div class="text-lg text-gray-600">
           <NuxtLink 
             v-if="artist" 
             :to="`/artists/${artist.slug}`"
@@ -52,10 +52,34 @@
               <h3 class="font-semibold mb-1">Release Date</h3>
               <p>{{ formatDate(song.releaseDate) }}</p>
             </div>
+          </div>
+        </UCard>
 
-            <div v-if="song.isrc">
-              <h3 class="font-semibold mb-1">ISRC</h3>
-              <p class="font-mono text-sm">{{ song.isrc }}</p>
+        <!-- Artist Info -->
+        <UCard v-if="artistGenres.length > 0 || artist?.country || artist?.formedYear">
+          <h3 class="text-xl font-semibold mb-4">Artist Info</h3>
+          <div class="grid gap-4">
+            <div v-if="artistGenres.length > 0">
+              <h4 class="font-semibold mb-1">Genres</h4>
+              <div class="flex flex-wrap gap-2">
+                <span 
+                  v-for="genre in artistGenres" 
+                  :key="genre"
+                  class="px-2 py-1 bg-gray-100 rounded text-sm"
+                >
+                  {{ genre }}
+                </span>
+              </div>
+            </div>
+            
+            <div v-if="artist?.country">
+              <h4 class="font-semibold mb-1">Country</h4>
+              <p>{{ artist.country }}</p>
+            </div>
+            
+            <div v-if="artist?.formedYear">
+              <h4 class="font-semibold mb-1">Formed</h4>
+              <p>{{ artist.formedYear }}</p>
             </div>
           </div>
         </UCard>
@@ -69,7 +93,7 @@
         <!-- Annotations -->
         <UCard v-if="song.annotations">
           <h3 class="text-xl font-semibold mb-4">Annotations</h3>
-          <div class="prose dark:prose-invert max-w-none" v-html="song.annotations"></div>
+          <div class="prose max-w-none" v-html="song.annotations"></div>
         </UCard>
 
         <!-- External Links -->
@@ -130,6 +154,16 @@ const { data, error, pending } = await useFetch('/api/songs/lookup', {
 const song = computed(() => data.value?.data?.song as Song | undefined)
 const artist = computed(() => data.value?.data?.artist as Artist | undefined)
 const album = computed(() => data.value?.data?.album as Album | undefined)
+
+// Parse artist genres
+const artistGenres = computed(() => {
+  if (!artist.value?.genres) return []
+  try {
+    return JSON.parse(artist.value.genres)
+  } catch (e) {
+    return []
+  }
+})
 
 // Parse external IDs for links
 const externalLinks = computed(() => {
