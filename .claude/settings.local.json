@@ -13,7 +13,9 @@
       "WebFetch(domain:nuxt.com)",
       "Bash(git branch:*)",
       "Bash(git checkout:*)",
-      "Bash(npx wrangler d1 execute:*)"
+      "Bash(npx wrangler d1 execute:*)",
+      "Bash(touch:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }
