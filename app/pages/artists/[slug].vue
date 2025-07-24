@@ -140,6 +140,15 @@ const slug = route.params.slug as string
 // In production with urlSlug, we'd use that instead
 const { data, error, pending } = await useFetch(`/api/artists/${slug}`)
 
+// Check for errors and throw with proper status code
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode || 404,
+    statusMessage: error.value.statusMessage || 'Artist not found',
+    fatal: true
+  })
+}
+
 const artist = computed(() => data.value?.data?.artist as Artist | undefined)
 const albums = computed(() => data.value?.data?.albums as Album[] | undefined)
 const songs = computed(() => data.value?.data?.songs as (Song & { albumTitle?: string })[] | undefined)

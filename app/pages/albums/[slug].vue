@@ -132,6 +132,15 @@ const { data, error, pending } = await useFetch('/api/albums/lookup', {
   }
 })
 
+// Check for errors and throw with proper status code
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode || 404,
+    statusMessage: error.value.statusMessage || 'Album not found',
+    fatal: true
+  })
+}
+
 const album = computed(() => data.value?.data?.album as Album | undefined)
 const artist = computed(() => data.value?.data?.artist as Artist | undefined)
 const songs = computed(() => data.value?.data?.songs as Song[] | undefined)
