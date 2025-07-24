@@ -9,7 +9,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "wrangler d1 execute db-daftfm --local --file=scripts/seed-data.sql",
+    "db:reset": "wrangler d1 execute db-daftfm --local --file=scripts/reset-data.sql"
   },
   "dependencies": {
     "@nuxt/ui-pro": "^3.3.0",
