@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npx tsx:*)",
       "Bash(curl:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls)"
     ],
     "deny": []
   }
