@@ -3,6 +3,6 @@
     title="Songs"
     api-endpoint="/api/songs"
     url-prefix="/songs"
-    :display-fields="['title', 'duration', 'artistId']"
+    :display-fields="['artistName', 'title']"
   />
 </template>

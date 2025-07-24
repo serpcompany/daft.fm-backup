@@ -1,6 +1,6 @@
 // GET /api/songs - List songs with pagination, search, and filtering  
 
-import { getSongs, searchSongs, getSongsByArtist, getSongsByAlbum } from '../../lib/queries'
+import { getSongs, getSongsWithArtists, searchSongs, getSongsByArtist, getSongsByAlbum } from '../../lib/queries'
 import { createDb } from '../../database/db'
 
 export default defineEventHandler(async (event) => {
@@ -42,8 +42,8 @@ export default defineEventHandler(async (event) => {
       songs = results
       hasMore = results.length === limit
     } else {
-      // Get paginated list of all songs
-      const results = await getSongs(db, limit, (page - 1) * limit)
+      // Get paginated list of all songs with artist names
+      const results = await getSongsWithArtists(db, limit, (page - 1) * limit)
       songs = results
       hasMore = results.length === limit
     }

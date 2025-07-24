@@ -219,6 +219,36 @@ export async function getSongs(db: Database, limit = 50, offset = 0): Promise<So
   }
 }
 
+export async function getSongsWithArtists(db: Database, limit = 50, offset = 0): Promise<(Song & {artistName: string})[]> {
+  try {
+    return await db.select({
+      id: songs.id,
+      title: songs.title,
+      slug: songs.slug,
+      duration: songs.duration,
+      artistId: songs.artistId,
+      albumId: songs.albumId,
+      releaseDate: songs.releaseDate,
+      lyrics: songs.lyrics,
+      annotations: songs.annotations,
+      isrc: songs.isrc,
+      wikidataId: songs.wikidataId,
+      externalIds: songs.externalIds,
+      createdAt: songs.createdAt,
+      updatedAt: songs.updatedAt,
+      artistName: artists.name
+    })
+    .from(songs)
+    .leftJoin(artists, eq(songs.artistId, artists.id))
+    .orderBy(asc(songs.title))
+    .limit(limit)
+    .offset(offset);
+  } catch (error) {
+    console.error('Error fetching songs with artists:', error);
+    return [];
+  }
+}
+
 export async function getAllSongs(db: Database, limit = 50): Promise<Song[]> {
   return getSongs(db, limit, 0);
 }
