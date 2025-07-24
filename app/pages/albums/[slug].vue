@@ -204,8 +204,23 @@ function formatDate(dateString: string | Date | number): string {
   })
 }
 
-// Set page meta
-useHead({
-  title: album.value ? `${album.value.title} - ${artist.value?.name || 'Album'}` : 'Album'
+// Dynamic SEO meta tags
+useSeoMeta({
+  title: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name} | Daft.fm` : 'Album | Daft.fm',
+  description: () => {
+    if (!album.value || !artist.value) return 'Album information on Daft.fm'
+    const year = album.value.releaseDate ? ` (${formatYear(album.value.releaseDate)})` : ''
+    const tracks = album.value.trackCount ? `, ${album.value.trackCount} tracks` : ''
+    return `Listen to ${album.value.title} by ${artist.value.name}${year}${tracks}. Full track listing and album details on Daft.fm.`
+  },
+  ogTitle: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name} | Daft.fm` : 'Album | Daft.fm',
+  ogDescription: () => album.value && artist.value ? `Explore ${album.value.title} by ${artist.value.name} on Daft.fm` : 'Album information',
+  ogImage: () => albumCoverArt.value[0] || '/og-image.png',
+  twitterCard: 'summary_large_image'
 })
+
+function formatYear(dateString: string | Date | number): string {
+  const date = new Date(dateString)
+  return date.getFullYear().toString()
+}
 </script>

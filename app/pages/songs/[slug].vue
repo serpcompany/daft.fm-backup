@@ -231,8 +231,18 @@ function createSlug(text: string): string {
     .substring(0, 50) || 'item'
 }
 
-// Set page meta
-useHead({
-  title: song.value ? `${song.value.title} - ${artist.value?.name || 'Unknown Artist'}` : 'Song'
+// Dynamic SEO meta tags
+useSeoMeta({
+  title: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
+  description: () => {
+    if (!song.value || !artist.value) return 'Song information on Daft.fm'
+    const album = album.value ? ` from ${album.value.title}` : ''
+    const duration = song.value.duration ? ` (${formatDuration(song.value.duration)})` : ''
+    return `Listen to ${song.value.title} by ${artist.value.name}${album}${duration}. Lyrics and song details on Daft.fm.`
+  },
+  ogTitle: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
+  ogDescription: () => song.value && artist.value ? `Stream ${song.value.title} by ${artist.value.name} on Daft.fm` : 'Song information',
+  ogImage: () => album.value && JSON.parse(album.value.coverArt || '[]')[0] || '/og-image.png',
+  twitterCard: 'summary_large_image'
 })
 </script>

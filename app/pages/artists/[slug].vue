@@ -212,8 +212,18 @@ function formatYear(dateString: string | Date | number): string {
   return date.getFullYear().toString()
 }
 
-// Set page meta
-useHead({
-  title: artist.value ? `${artist.value.name} - Artist` : 'Artist'
+// Dynamic SEO meta tags
+useSeoMeta({
+  title: () => artist.value ? `${artist.value.name} - Artist | Daft.fm` : 'Artist | Daft.fm',
+  description: () => {
+    if (!artist.value) return 'Artist information on Daft.fm'
+    const country = artist.value.country ? ` from ${artist.value.country}` : ''
+    const year = artist.value.formedYear ? ` (formed ${artist.value.formedYear})` : ''
+    return `Learn about ${artist.value.name}${country}${year}. Browse albums, songs, and more on Daft.fm.`
+  },
+  ogTitle: () => artist.value ? `${artist.value.name} - Artist | Daft.fm` : 'Artist | Daft.fm',
+  ogDescription: () => artist.value ? `Explore ${artist.value.name}'s music, albums, and songs on Daft.fm` : 'Artist information',
+  ogImage: () => artistImages.value[0] || '/og-image.png',
+  twitterCard: 'summary_large_image'
 })
 </script>
