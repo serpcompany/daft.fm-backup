@@ -54,7 +54,8 @@ function getItemUrl(item: Artist | Album | Song): string {
   
   if (props.urlPrefix === '/artists') {
     const artistItem = item as Artist & {urlSlug: string}
-    return `${props.urlPrefix}/${artistItem.urlSlug || item.slug}`
+    // Use slug for now since urlSlug isn't populated correctly
+    return `${props.urlPrefix}/${item.slug}`
   } else if (props.urlPrefix === '/albums') {
     // albums/[artist]-[album]
     const albumItem = item as Album & {artistName: string}
