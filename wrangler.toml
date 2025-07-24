@@ -1,0 +1,8 @@
+name = "daftfm"
+compatibility_date = "2025-07-24"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "db-daftfm"
+database_id = "487a690b-5a7e-4c86-b9fd-7add6753de75"
+migrations_dir = "server/database/migrations"

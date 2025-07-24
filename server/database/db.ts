@@ -1,17 +1,12 @@
-// Local SQLite database connection for development
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+// Cloudflare D1 database connection
+import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './schema';
-import path from 'path';
 
-// Create database connection
-const sqlite = new Database(path.join(process.cwd(), 'local.db'));
-export const db = drizzle(sqlite, { schema });
-
-// Run migrations on startup
-export function runMigrations() {
-  migrate(db, { migrationsFolder: './server/database/migrations' });
+// For local development, this will be provided by Wrangler
+// In production, it will be bound via wrangler.toml
+export function createDb(d1Database: D1Database) {
+  return drizzle(d1Database, { schema });
 }
 
-export default db;
+// Type for the database instance
+export type Database = ReturnType<typeof createDb>;
