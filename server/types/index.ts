@@ -46,3 +46,61 @@ export type AlbumWithParsedData = Omit<Album, 'coverArt' | 'externalIds'> & {
 export type SongWithParsedData = Omit<Song, 'externalIds'> & {
   externalIds?: Record<string, string>;
 };
+
+// API Response types
+export const apiResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    artists: z.array(selectArtistSchema).optional(),
+    albums: z.array(selectAlbumSchema).optional(),
+    songs: z.array(selectSongSchema).optional(),
+    pagination: z.object({
+      page: z.number(),
+      limit: z.number(),
+      hasMore: z.boolean()
+    }).optional(),
+    search: z.string().nullable().optional()
+  }),
+  error: z.string().optional()
+});
+
+export type ApiResponse = z.infer<typeof apiResponseSchema>;
+
+export type ArtistsResponse = {
+  success: true;
+  data: {
+    artists: Artist[];
+    pagination: {
+      page: number;
+      limit: number;
+      hasMore: boolean;
+    };
+    search: string | null;
+  };
+};
+
+export type AlbumsResponse = {
+  success: true;
+  data: {
+    albums: Album[];
+    pagination: {
+      page: number;
+      limit: number;
+      hasMore: boolean;
+    };
+    search: string | null;
+  };
+};
+
+export type SongsResponse = {
+  success: true;
+  data: {
+    songs: Song[];
+    pagination: {
+      page: number;
+      limit: number;
+      hasMore: boolean;
+    };
+    search: string | null;
+  };
+};

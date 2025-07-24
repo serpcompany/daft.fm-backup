@@ -1,6 +1,6 @@
 // GET /api/albums - List albums with pagination, search, and filtering
 
-import { getAlbums, searchAlbums, getAlbumsByArtist } from '../../lib/queries'
+import { getAlbums, getAlbumsWithArtists, searchAlbums, getAlbumsByArtist } from '../../lib/queries'
 import { createDb } from '../../database/db'
 
 export default defineEventHandler(async (event) => {
@@ -36,8 +36,8 @@ export default defineEventHandler(async (event) => {
       albums = results
       hasMore = results.length === limit
     } else {
-      // Get paginated list of all albums
-      const results = await getAlbums(db, limit, (page - 1) * limit)
+      // Get paginated list of all albums with artist names
+      const results = await getAlbumsWithArtists(db, limit, (page - 1) * limit)
       albums = results
       hasMore = results.length === limit
     }

@@ -99,6 +99,33 @@ export async function getAlbums(db: Database, limit = 50, offset = 0): Promise<A
   }
 }
 
+export async function getAlbumsWithArtists(db: Database, limit = 50, offset = 0): Promise<(Album & {artistName: string})[]> {
+  try {
+    return await db.select({
+      id: albums.id,
+      title: albums.title,
+      slug: albums.slug,
+      artistId: albums.artistId,
+      releaseDate: albums.releaseDate,
+      trackCount: albums.trackCount,
+      coverArt: albums.coverArt,
+      wikidataId: albums.wikidataId,
+      externalIds: albums.externalIds,
+      createdAt: albums.createdAt,
+      updatedAt: albums.updatedAt,
+      artistName: artists.name
+    })
+    .from(albums)
+    .leftJoin(artists, eq(albums.artistId, artists.id))
+    .orderBy(desc(albums.releaseDate))
+    .limit(limit)
+    .offset(offset);
+  } catch (error) {
+    console.error('Error fetching albums with artists:', error);
+    return [];
+  }
+}
+
 export async function getAllAlbums(db: Database, limit = 50): Promise<Album[]> {
   return getAlbums(db, limit, 0);
 }
