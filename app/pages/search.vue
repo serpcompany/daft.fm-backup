@@ -2,7 +2,7 @@
   <div class="py-8">
     <UPage>
       <UPageHeader 
-        :title="`Search Results for \"${searchQuery}\"`"
+        :title="`Search Results for '${searchQuery}'`"
         :description="`Found ${totalResults} results`"
       />
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { db } from '~/server/database/db'
-import { artists, albums, songs } from '~/server/database/schema'
+import { createDb } from '../database/db'
+import { artists, albums, songs } from '../database/schema'
 import { like, or, sql, eq } from 'drizzle-orm'
 
 const searchQuerySchema = z.object({
@@ -10,6 +10,7 @@ const searchQuerySchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
+  const db = createDb(event.context.cloudflare.env.DB)
   try {
     // Parse and validate query parameters
     const query = getQuery(event)
