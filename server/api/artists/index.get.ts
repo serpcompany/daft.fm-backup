@@ -2,6 +2,7 @@
 
 import { getArtists, searchArtists } from '../../lib/queries'
 import { createDb } from '../../database/db'
+import { artistListResponseSchema } from '../../types/schemas'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -36,18 +37,22 @@ export default defineEventHandler(async (event) => {
       hasMore = results.length === limit
     }
 
-    return {
+    const response = {
       success: true,
-      data: {
-        artists,
-        pagination: {
-          page,
-          limit,
-          hasMore
-        },
+      data: artists,
+      pagination: {
+        page,
+        limit,
+        hasMore,
+        total: artists.length === limit ? 'unknown' : artists.length
+      },
+      filters: {
         search: search || null
       }
     }
+
+    // Validate response schema
+    return artistListResponseSchema.parse(response)
   } catch (error) {
     console.error('Error fetching artists:', error)
     throw createError({

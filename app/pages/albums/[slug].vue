@@ -100,10 +100,12 @@
     </div>
 
     <div v-else>
-      <UEmptyState 
-        title="Album not found"
-        description="The album you're looking for doesn't exist."
-      />
+      <UCard>
+        <div class="text-center py-8">
+          <p class="text-2xl font-semibold mb-2">Album not found</p>
+          <p class="text-gray-500">The album you're looking for doesn't exist.</p>
+        </div>
+      </UCard>
     </div>
   </UContainer>
 </template>

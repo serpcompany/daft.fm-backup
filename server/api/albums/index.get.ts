@@ -2,6 +2,7 @@
 
 import { getAlbums, getAlbumsWithArtists, searchAlbums, getAlbumsByArtist } from '../../lib/queries'
 import { createDb } from '../../database/db'
+import { albumListResponseSchema } from '../../types/schemas'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -42,21 +43,26 @@ export default defineEventHandler(async (event) => {
       hasMore = results.length === limit
     }
 
-    return {
+    // The data from getAlbumsWithArtists already includes the joined fields
+    const mappedAlbums = albums
+
+    const response = {
       success: true,
-      data: {
-        albums,
-        pagination: {
-          page,
-          limit,
-          hasMore
-        },
-        filters: {
-          search: search || null,
-          artistId: artistId || null
-        }
+      data: mappedAlbums,
+      pagination: {
+        page,
+        limit,
+        hasMore,
+        total: mappedAlbums.length === limit ? 'unknown' : mappedAlbums.length
+      },
+      filters: {
+        search: search || null,
+        artistId: artistId || null
       }
     }
+
+    // Validate response schema
+    return albumListResponseSchema.parse(response)
   } catch (error) {
     console.error('Error fetching albums:', error)
     throw createError({

@@ -1,33 +1,30 @@
-// Generated types and Zod schemas from Drizzle schema
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+// Re-export all types and schemas from schemas.ts
+export * from './schemas';
+
+// Additional utility types
 import { z } from 'zod';
+import { artistSchema, albumSchema, songSchema } from './schemas';
+
+// Insert and Update schemas
+import { createInsertSchema } from 'drizzle-zod';
 import { artists, albums, songs } from '../database/schema';
 
-// Artist schemas
 export const insertArtistSchema = createInsertSchema(artists);
-export const selectArtistSchema = createSelectSchema(artists);
-export const updateArtistSchema = createInsertSchema(artists).partial();
+export const updateArtistSchema = insertArtistSchema.partial();
 
-// Album schemas
 export const insertAlbumSchema = createInsertSchema(albums);
-export const selectAlbumSchema = createSelectSchema(albums);
-export const updateAlbumSchema = createInsertSchema(albums).partial();
+export const updateAlbumSchema = insertAlbumSchema.partial();
 
-// Song schemas
 export const insertSongSchema = createInsertSchema(songs);
-export const selectSongSchema = createSelectSchema(songs);
-export const updateSongSchema = createInsertSchema(songs).partial();
+export const updateSongSchema = insertSongSchema.partial();
 
-// TypeScript types (inferred from Zod schemas)
-export type Artist = z.infer<typeof selectArtistSchema>;
+// Insert and Update types
 export type InsertArtist = z.infer<typeof insertArtistSchema>;
 export type UpdateArtist = z.infer<typeof updateArtistSchema>;
 
-export type Album = z.infer<typeof selectAlbumSchema>;
 export type InsertAlbum = z.infer<typeof insertAlbumSchema>;
 export type UpdateAlbum = z.infer<typeof updateAlbumSchema>;
 
-export type Song = z.infer<typeof selectSongSchema>;
 export type InsertSong = z.infer<typeof insertSongSchema>;
 export type UpdateSong = z.infer<typeof updateSongSchema>;
 
@@ -45,62 +42,4 @@ export type AlbumWithParsedData = Omit<Album, 'coverArt' | 'externalIds'> & {
 
 export type SongWithParsedData = Omit<Song, 'externalIds'> & {
   externalIds?: Record<string, string>;
-};
-
-// API Response types
-export const apiResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
-    artists: z.array(selectArtistSchema).optional(),
-    albums: z.array(selectAlbumSchema).optional(),
-    songs: z.array(selectSongSchema).optional(),
-    pagination: z.object({
-      page: z.number(),
-      limit: z.number(),
-      hasMore: z.boolean()
-    }).optional(),
-    search: z.string().nullable().optional()
-  }),
-  error: z.string().optional()
-});
-
-export type ApiResponse = z.infer<typeof apiResponseSchema>;
-
-export type ArtistsResponse = {
-  success: true;
-  data: {
-    artists: Artist[];
-    pagination: {
-      page: number;
-      limit: number;
-      hasMore: boolean;
-    };
-    search: string | null;
-  };
-};
-
-export type AlbumsResponse = {
-  success: true;
-  data: {
-    albums: Album[];
-    pagination: {
-      page: number;
-      limit: number;
-      hasMore: boolean;
-    };
-    search: string | null;
-  };
-};
-
-export type SongsResponse = {
-  success: true;
-  data: {
-    songs: Song[];
-    pagination: {
-      page: number;
-      limit: number;
-      hasMore: boolean;
-    };
-    search: string | null;
-  };
 };

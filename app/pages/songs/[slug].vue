@@ -116,10 +116,12 @@
     </div>
 
     <div v-else>
-      <UEmptyState 
-        title="Song not found"
-        description="The song you're looking for doesn't exist."
-      />
+      <UCard>
+        <div class="text-center py-8">
+          <p class="text-2xl font-semibold mb-2">Song not found</p>
+          <p class="text-gray-500">The song you're looking for doesn't exist.</p>
+        </div>
+      </UCard>
     </div>
   </UContainer>
 </template>
@@ -127,37 +129,88 @@
 <script setup lang="ts">
 import type { Song, Artist, Album } from '~/server/types'
 
+// PREVENTION 1: Validate route parameters BEFORE any processing
+definePageMeta({
+  validate: async (route) => {
+    const slug = route.params.slug
+    // Ensure slug exists and is not 'undefined'
+    if (!slug || slug === 'undefined' || typeof slug !== 'string') {
+      return false // This will show 404 page
+    }
+    // Ensure slug has at least one hyphen (artist-song format)
+    if (!slug.includes('-')) {
+      return false
+    }
+    // Basic slug format validation
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      return false
+    }
+    return true
+  }
+})
+
 const route = useRoute()
 const slug = route.params.slug as string
 
-// For song URLs like /songs/daft-punk-one-more-time
-// We need to parse out the artist and song slugs
-const parts = slug.split('-')
-
-// Try to find the best split - this is temporary
-// In production, URLs would include the ID: /songs/daft-punk-one-more-time-[id]
-let artistSlug = ''
-let songSlug = ''
-
-// For now, assume a simple 50/50 split
-const midpoint = Math.floor(parts.length / 2)
-artistSlug = parts.slice(0, midpoint).join('-')
-songSlug = parts.slice(midpoint).join('-')
-
-const { data, error, pending } = await useFetch(`/api/songs/${slug}`)
-
-// Check for errors and throw with proper status code
-if (error.value) {
+// PREVENTION 2: Validate data exists BEFORE using it
+// Check if we even have a valid slug to work with
+if (!slug || slug === 'undefined') {
   throw createError({
-    statusCode: error.value.statusCode || 404,
-    statusMessage: error.value.statusMessage || 'Song not found',
+    statusCode: 404,
+    statusMessage: 'Invalid song URL',
     fatal: true
   })
 }
 
-const song = computed(() => data.value?.data?.song as Song | undefined)
-const artist = computed(() => data.value?.data?.artist as Artist | undefined)
-const album = computed(() => data.value?.data?.album as Album | undefined)
+// PREVENTION 3: Use try-catch for API calls
+const { data, error, pending } = await useFetch(`/api/songs/${slug}`, {
+  // PREVENTION 4: Set default error behavior
+  onResponseError({ response }) {
+    // Handle API errors gracefully
+    throw createError({
+      statusCode: response.status || 404,
+      statusMessage: 'Song not found',
+      fatal: true
+    })
+  }
+})
+
+// PREVENTION 5: Check both error AND data validity
+if (error.value || !data.value || !data.value.success) {
+  throw createError({
+    statusCode: error.value?.statusCode || 404,
+    statusMessage: error.value?.statusMessage || 'Song not found',
+    fatal: true
+  })
+}
+
+// PREVENTION 6: Validate data structure before using
+const song = computed(() => {
+  const s = data.value?.data?.song
+  if (!s || !s.id || !s.title) return undefined
+  return s as Song
+})
+
+const artist = computed(() => {
+  const a = data.value?.data?.artist
+  if (!a || !a.id || !a.name) return undefined
+  return a as Artist
+})
+
+const album = computed(() => {
+  const a = data.value?.data?.album
+  // Album is optional, so just check if it exists
+  return a as Album | undefined
+})
+
+// PREVENTION 7: If critical data is missing, show 404
+if (!song.value || !artist.value) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: 'Song not found',
+    fatal: true
+  })
+}
 
 // Parse artist genres
 const artistGenres = computed(() => {

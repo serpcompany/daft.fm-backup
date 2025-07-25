@@ -2,7 +2,7 @@
 import { eq, desc, asc, like } from 'drizzle-orm';
 import { createDb, type Database } from '../database/db';
 import { artists, albums, songs } from '../database/schema';
-import type { Artist, Album, Song } from '../types';
+import type { Artist, Album, Song, AlbumWithArtist, SongWithDetails, ArtistWithStats } from '../types';
 import { isValidMbid } from './urls';
 
 /**
@@ -72,11 +72,7 @@ export async function getAllArtists(db: Database, limit = 50): Promise<Artist[]>
   return getArtists(db, limit, 0);
 }
 
-export async function getArtistWithStats(db: Database, mbid: string): Promise<{
-  artist: Artist;
-  albumCount: number;
-  songCount: number;
-} | null> {
+export async function getArtistWithStats(db: Database, mbid: string): Promise<ArtistWithStats | null> {
   const artist = await getArtistByMbid(db, mbid);
   if (!artist) return null;
   
@@ -119,7 +115,7 @@ export async function getAlbums(db: Database, limit = 50, offset = 0): Promise<A
   }
 }
 
-export async function getAlbumsWithArtists(db: Database, limit = 50, offset = 0): Promise<(Album & {artistName: string})[]> {
+export async function getAlbumsWithArtists(db: Database, limit = 50, offset = 0): Promise<AlbumWithArtist[]> {
   try {
     return await db.select({
       id: albums.id,
@@ -133,7 +129,8 @@ export async function getAlbumsWithArtists(db: Database, limit = 50, offset = 0)
       externalIds: albums.externalIds,
       createdAt: albums.createdAt,
       updatedAt: albums.updatedAt,
-      artistName: artists.name
+      artistName: artists.name,
+      artistSlug: artists.slug
     })
     .from(albums)
     .leftJoin(artists, eq(albums.artistId, artists.id))
@@ -239,7 +236,7 @@ export async function getSongs(db: Database, limit = 50, offset = 0): Promise<So
   }
 }
 
-export async function getSongsWithArtists(db: Database, limit = 50, offset = 0): Promise<(Song & {artistName: string})[]> {
+export async function getSongsWithArtists(db: Database, limit = 50, offset = 0): Promise<SongWithDetails[]> {
   try {
     return await db.select({
       id: songs.id,
@@ -256,10 +253,14 @@ export async function getSongsWithArtists(db: Database, limit = 50, offset = 0):
       externalIds: songs.externalIds,
       createdAt: songs.createdAt,
       updatedAt: songs.updatedAt,
-      artistName: artists.name
+      artistName: artists.name,
+      artistSlug: artists.slug,
+      albumTitle: albums.title,
+      albumSlug: albums.slug
     })
     .from(songs)
     .leftJoin(artists, eq(songs.artistId, artists.id))
+    .leftJoin(albums, eq(songs.albumId, albums.id))
     .orderBy(asc(songs.title))
     .limit(limit)
     .offset(offset);
