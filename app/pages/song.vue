@@ -216,17 +216,47 @@ function formatDate(dateString: string | Date | number): string {
 }
 
 // Dynamic SEO meta tags
+const canonicalUrl = computed(() => {
+  if (!artistSlug || !songSlug) return 'https://daft.fm/song'
+  return `https://daft.fm/song?artist=${artistSlug}&song=${songSlug}`
+})
+
+const albumCoverArt = computed(() => {
+  if (!album.value?.coverArt) return []
+  try {
+    return JSON.parse(album.value.coverArt)
+  } catch (e) {
+    return []
+  }
+})
+
 useSeoMeta({
   title: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
   description: () => {
     if (!song.value || !artist.value) return 'Song information on Daft.fm'
-    const album = album.value ? ` from ${album.value.title}` : ''
+    const albumText = album.value ? ` from ${album.value.title}` : ''
     const duration = song.value.duration ? ` (${formatDuration(song.value.duration)})` : ''
-    return `Listen to ${song.value.title} by ${artist.value.name}${album}${duration}. Lyrics and song details on Daft.fm.`
+    const year = song.value.releaseDate ? ` (${new Date(song.value.releaseDate).getFullYear()})` : ''
+    return `Listen to ${song.value.title} by ${artist.value.name}${albumText}${year}${duration}. Lyrics and details on Daft.fm.`.substring(0, 160)
   },
   ogTitle: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
   ogDescription: () => song.value && artist.value ? `Stream ${song.value.title} by ${artist.value.name} on Daft.fm` : 'Song information',
-  ogImage: () => album.value && JSON.parse(album.value.coverArt || '[]')[0] || '/og-image.png',
-  twitterCard: 'summary_large_image'
+  ogImage: () => albumCoverArt.value[0] || '/og-image.png',
+  ogUrl: canonicalUrl,
+  ogType: 'music.song',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name}` : 'Song',
+  twitterDescription: () => song.value && artist.value ? `Listen on Daft.fm` : 'Song information',
+  twitterImage: () => albumCoverArt.value[0] || '/og-image.png'
+})
+
+// Add canonical URL
+useHead({
+  link: [
+    {
+      rel: 'canonical',
+      href: canonicalUrl
+    }
+  ]
 })
 </script>

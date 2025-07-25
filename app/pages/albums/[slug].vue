@@ -200,18 +200,88 @@ function formatDate(dateString: string | Date | number): string {
 }
 
 // Dynamic SEO meta tags
+const canonicalUrl = computed(() => `https://daft.fm/albums/${route.params.slug}`)
+
 useSeoMeta({
   title: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name} | Daft.fm` : 'Album | Daft.fm',
   description: () => {
     if (!album.value || !artist.value) return 'Album information on Daft.fm'
     const year = album.value.releaseDate ? ` (${formatYear(album.value.releaseDate)})` : ''
     const tracks = album.value.trackCount ? `, ${album.value.trackCount} tracks` : ''
-    return `Listen to ${album.value.title} by ${artist.value.name}${year}${tracks}. Full track listing and album details on Daft.fm.`
+    const duration = totalDuration.value ? `, ${formatDuration(totalDuration.value)} total` : ''
+    return `Listen to ${album.value.title} by ${artist.value.name}${year}${tracks}${duration}. Full track listing on Daft.fm.`.substring(0, 160)
   },
   ogTitle: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name} | Daft.fm` : 'Album | Daft.fm',
   ogDescription: () => album.value && artist.value ? `Explore ${album.value.title} by ${artist.value.name} on Daft.fm` : 'Album information',
   ogImage: () => albumCoverArt.value[0] || '/og-image.png',
-  twitterCard: 'summary_large_image'
+  ogUrl: canonicalUrl,
+  ogType: 'music.album',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name}` : 'Album',
+  twitterDescription: () => album.value && artist.value ? `Listen on Daft.fm` : 'Album information',
+  twitterImage: () => albumCoverArt.value[0] || '/og-image.png'
+})
+
+// Add canonical URL
+useHead({
+  link: [
+    {
+      rel: 'canonical',
+      href: canonicalUrl
+    }
+  ]
+})
+
+// JSON-LD structured data
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => {
+        if (!album.value || !artist.value) return ''
+        
+        const musicAlbum = {
+          '@context': 'https://schema.org',
+          '@type': 'MusicAlbum',
+          '@id': canonicalUrl.value,
+          name: album.value.title,
+          url: canonicalUrl.value,
+          ...(album.value.releaseDate && { datePublished: new Date(album.value.releaseDate).toISOString() }),
+          ...(album.value.trackCount && { numTracks: album.value.trackCount }),
+          ...(albumCoverArt.value.length > 0 && { image: albumCoverArt.value }),
+          byArtist: {
+            '@type': 'MusicGroup',
+            '@id': `https://daft.fm/artists/${artist.value.slug}`,
+            name: artist.value.name,
+            url: `https://daft.fm/artists/${artist.value.slug}`
+          }
+        }
+        
+        // Add external links as sameAs
+        const sameAs = []
+        if (externalLinks.value.length > 0) {
+          externalLinks.value.forEach(link => {
+            sameAs.push(link.url)
+          })
+          musicAlbum.sameAs = sameAs
+        }
+        
+        // Add tracks if available
+        if (songs.value && songs.value.length > 0) {
+          musicAlbum.track = songs.value.map((song, index) => ({
+            '@type': 'MusicRecording',
+            '@id': `https://daft.fm/songs/${artist.value.slug}-${song.slug}`,
+            position: index + 1,
+            name: song.title,
+            url: `https://daft.fm/songs/${artist.value.slug}-${song.slug}`,
+            ...(song.duration && { duration: `PT${Math.floor(song.duration / 60)}M${song.duration % 60}S` })
+          }))
+        }
+        
+        return JSON.stringify(musicAlbum, null, 2)
+      }).value
+    }
+  ]
 })
 
 function formatYear(dateString: string | Date | number): string {
