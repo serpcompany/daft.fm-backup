@@ -17,6 +17,10 @@ import {
   getRelease,
   createSlug 
 } from '../../server/lib/musicbrainz';
+import dotenv from 'dotenv';
+
+// Load environment variables for Musixmatch API
+dotenv.config();
 
 // Database connection
 import { getProductionDb, getStagingDb } from './config/database';
@@ -32,11 +36,12 @@ if (useStaging) {
   console.log('⚠️  Using PRODUCTION database directly\n');
 }
 
-// Curated list of top artists - LIMITED TO 3 FOR TESTING
+// Curated list of top artists - LIMITED TO 4 FOR TESTING
 const TOP_ARTISTS = [
   'The Beatles',    // Classic Rock
   'Daft Punk',      // Electronic  
-  'Taylor Swift'    // Pop
+  'Radiohead',      // Alternative Rock
+  'Miles Davis'     // Jazz (likely to have instrumentals)
 ];
 
 // Patterns that indicate a track is NOT canonical
@@ -62,6 +67,48 @@ const NON_CANONICAL_PATTERNS = [
 // Check if a track is canonical
 function isCanonicalTrack(title: string): boolean {
   return !NON_CANONICAL_PATTERNS.some(pattern => pattern.test(title));
+}
+
+// Simple delay function for rate limiting
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Check if a track is instrumental using Musixmatch API
+async function checkInstrumentalStatus(title: string, artist: string, isrc?: string): Promise<boolean | null> {
+  const apiKey = process.env.MUSIXMATCH_API_KEY;
+  if (!apiKey) {
+    return null; // Can't check without API key
+  }
+
+  try {
+    let url = `https://api.musixmatch.com/ws/1.1/track.search?apikey=${apiKey}&format=json&page_size=1`;
+    
+    if (isrc && isrc.length > 0) {
+      url += `&track_isrc=${encodeURIComponent(isrc)}`;
+    } else {
+      url += `&q_track=${encodeURIComponent(title)}&q_artist=${encodeURIComponent(artist)}`;
+    }
+    
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    
+    const data = await response.json() as any;
+    
+    if (data.message.header.status_code !== 200 || 
+        !data.message.body.track_list || 
+        data.message.body.track_list.length === 0) {
+      return null;
+    }
+    
+    const track = data.message.body.track_list[0].track;
+    // A track is instrumental if the flag is set OR if it has no lyrics
+    return track.instrumental === 1 || track.has_lyrics === 0;
+    
+  } catch (error) {
+    console.error(`Error checking instrumental status: ${error}`);
+    return null;
+  }
 }
 
 // Extract external IDs from relationships
@@ -102,6 +149,7 @@ async function collectCleanData() {
     artists: 0,
     albums: 0,
     songs: 0,
+    instrumental: 0,
     skippedAlbums: 0,
     skippedSongs: 0
   };
@@ -309,6 +357,14 @@ async function collectCleanData() {
           for (const track of canonicalTracks) {
             const recording = track.recording;
             
+            // Check if track is instrumental via Musixmatch (with rate limiting)
+            await delay(100); // Small delay to avoid hitting rate limits
+            const isInstrumental = await checkInstrumentalStatus(
+              recording.title,
+              artist.name,
+              recording.isrcs?.[0] || null
+            );
+            
             const songData = {
               title: recording.title,
               slug: createSlug(recording.title),
@@ -320,7 +376,9 @@ async function collectCleanData() {
               annotations: null,
               credits: null,
               musicbrainzId: recording.id,
-              isrc: null,
+              musicbrainzRecordingId: recording.id,
+              isInstrumental: isInstrumental || false, // Use Musixmatch result or default to false
+              isrc: recording.isrcs?.[0] || null,
               wikidataId: null,
               externalIds: JSON.stringify({}),
               createdAt: new Date(),
@@ -329,6 +387,15 @@ async function collectCleanData() {
             
             await db.insert(songs).values(songData).onConflictDoNothing();
             stats.songs++;
+            
+            if (isInstrumental === true) {
+              stats.instrumental++;
+            }
+            
+            if (isInstrumental !== null) {
+              console.log(`           ${recording.title}: ${isInstrumental ? '🎸 instrumental' : '🎤 vocal'}`);
+            }
+            
             trackPosition++;
           }
           
@@ -348,6 +415,7 @@ async function collectCleanData() {
   console.log(`   Artists added: ${stats.artists}`);
   console.log(`   Albums added: ${stats.albums}`);
   console.log(`   Songs added: ${stats.songs}`);
+  console.log(`   Instrumental songs: ${stats.instrumental} (${Math.round(stats.instrumental * 100 / stats.songs)}%)`);
   console.log(`   Albums skipped (non-studio): ${stats.skippedAlbums}`);
   console.log(`   Songs skipped (non-canonical): ${stats.skippedSongs}`);
   console.log('='.repeat(60));

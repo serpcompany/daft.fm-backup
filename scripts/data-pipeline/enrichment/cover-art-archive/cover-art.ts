@@ -26,10 +26,16 @@ export interface CoverArtResponse {
 
 export async function fetchAlbumCoverArt(mbid: string): Promise<string[]> {
   try {
-    const response = await fetch(`https://coverartarchive.org/release/${mbid}`)
+    // Try release group first
+    let response = await fetch(`https://coverartarchive.org/release-group/${mbid}`)
     
     if (response.status === 404) {
-      return []
+      // Fall back to release ID
+      response = await fetch(`https://coverartarchive.org/release/${mbid}`)
+      
+      if (response.status === 404) {
+        return []
+      }
     }
     
     if (!response.ok) {

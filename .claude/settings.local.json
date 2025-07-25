@@ -24,7 +24,18 @@
       "mcp__browser-tools__getConsoleLogs",
       "mcp__browser-tools__getNetworkErrors",
       "mcp__browser-tools__getNetworkLogs",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(pip install:*)",
+      "Bash(source:*)",
+      "Bash(python:*)",
+      "Bash(pip3 install:*)",
+      "Bash(ls:*)",
+      "Bash(tsx:*)",
+      "WebFetch(domain:musicbrainz.org)",
+      "WebFetch(domain:acousticbrainz.org)"
     ],
     "deny": []
   }
