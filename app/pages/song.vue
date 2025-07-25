@@ -220,7 +220,7 @@ import { generateSeoMeta, buildCanonicalUrl } from '~/utils/seo'
 // Dynamic SEO meta tags
 const canonicalUrl = computed(() => {
   if (!artistSlug || !songSlug) return buildCanonicalUrl('/song')
-  return buildCanonicalUrl(`/song?artist=${artistSlug}&song=${songSlug}`)
+  return buildCanonicalUrl(`/songs/${artistSlug}-${songSlug}`)
 })
 
 const albumCoverArt = computed(() => {

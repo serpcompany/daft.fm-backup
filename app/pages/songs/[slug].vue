@@ -30,7 +30,7 @@
           <span v-if="album"> • </span>
           <NuxtLink 
             v-if="album && artist" 
-            :to="`/albums/${createSlug(artist.name)}-${album.slug}`"
+            :to="`/albums/${artist.slug}-${album.slug}`"
             class="hover:underline"
           >
             {{ album.title }}
