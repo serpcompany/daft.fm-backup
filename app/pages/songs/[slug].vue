@@ -42,7 +42,7 @@
       <div class="grid gap-6">
         <!-- Basic Info -->
         <UCard>
-          <div class="grid gap-4">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div v-if="song.duration">
               <h3 class="font-semibold mb-1">Duration</h3>
               <p>{{ formatDuration(song.duration) }}</p>
@@ -51,6 +51,11 @@
             <div v-if="song.releaseDate">
               <h3 class="font-semibold mb-1">Release Date</h3>
               <p>{{ formatDate(song.releaseDate) }}</p>
+            </div>
+            
+            <div v-if="song.isrc">
+              <h3 class="font-semibold mb-1">ISRC</h3>
+              <p class="font-mono text-sm">{{ song.isrc }}</p>
             </div>
           </div>
         </UCard>

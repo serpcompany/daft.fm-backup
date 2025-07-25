@@ -25,6 +25,7 @@
           <span v-if="artist.country">From {{ artist.country }}</span>
           <span v-if="artist.formedYear">Formed {{ artist.formedYear }}</span>
           <span v-if="artistMembers.length > 0">{{ artistMembers.length }} members</span>
+          <span v-if="artist.wikidataId">Wikidata: {{ artist.wikidataId }}</span>
         </div>
         
         <div v-if="artistGenres.length > 0" class="mt-4 flex flex-wrap gap-2">

@@ -316,14 +316,41 @@ Create a comprehensive credits system for each track:
 
 ## Data Sources
 
-### APIs to Integrate:
-1. Spotify API - Audio features, popularity metrics
-2. Genius API - Lyrics, annotations, artist bios
-3. Last.fm API - Tags, similar artists, play counts
-4. Discogs API - Detailed credits, release variations
-5. MusicBrainz API - Comprehensive metadata
-6. Setlist.fm API - Live performance data
-7. TheAudioDB - Additional metadata, images
+### Currently Integrated APIs:
+1. **MusicBrainz API** (✅ Using) - Core metadata
+2. **Cover Art Archive** (✅ Using) - Album artwork
+3. **Last.fm API** (✅ Have key) - Artist bios, images, tags
+4. **Genius API** (✅ Have key) - Lyrics, annotations
+5. **Discogs API** (✅ Have key) - Credits, release variations
+6. **Spotify API** (✅ Have key) - Audio features, popularity
+
+### Priority APIs to Add (Based on Missing Data):
+7. **Jaxsta API** (🔴 Critical for credits)
+   - https://jaxsta.com/api
+   - Comprehensive producer/engineer/writer credits
+   - Would fill our 100% missing album credits gap
+   
+8. **Musixmatch API** (🔴 Critical for lyrics)
+   - https://developer.musixmatch.com/
+   - 14+ million lyrics database
+   - Would fill our 100% missing lyrics gap
+   
+9. **Apple Music API** (🟡 Important)
+   - https://developer.apple.com/documentation/applemusicapi/
+   - High-quality album artwork
+   - ISRC codes (we have 0% coverage)
+   
+10. **SecondHandSongs API** (🟢 Nice to have)
+    - https://secondhandsongs.com/page/API
+    - Cover versions, samples, adaptations
+    
+11. **Setlist.fm API** (🟢 Nice to have)
+    - https://api.setlist.fm/docs/
+    - Live performance data
+    
+12. **TheAudioDB** (🟢 Nice to have)
+    - https://www.theaudiodb.com/api_guide.php
+    - Additional metadata, images
 
 ### Scraping Targets:
 1. WhoSampled - Sample connections
