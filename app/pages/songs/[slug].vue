@@ -226,8 +226,10 @@ function createSlug(text: string): string {
     .substring(0, 50) || 'item'
 }
 
+import { generateSeoMeta, buildCanonicalUrl } from '~/utils/seo'
+
 // Dynamic SEO meta tags
-const canonicalUrl = computed(() => `https://daft.fm/songs/${route.params.slug}`)
+const canonicalUrl = computed(() => buildCanonicalUrl(`/songs/${route.params.slug}`))
 const albumCoverArt = computed(() => {
   if (!album.value?.coverArt) return []
   try {
@@ -237,25 +239,19 @@ const albumCoverArt = computed(() => {
   }
 })
 
-useSeoMeta({
-  title: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
-  description: () => {
-    if (!song.value || !artist.value) return 'Song information on Daft.fm'
-    const albumText = album.value ? ` from ${album.value.title}` : ''
-    const duration = song.value.duration ? ` (${formatDuration(song.value.duration)})` : ''
-    const year = song.value.releaseDate ? ` (${new Date(song.value.releaseDate).getFullYear()})` : ''
-    return `Listen to ${song.value.title} by ${artist.value.name}${albumText}${year}${duration}. Lyrics and details on Daft.fm.`.substring(0, 160)
-  },
-  ogTitle: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name} | Daft.fm` : 'Song | Daft.fm',
-  ogDescription: () => song.value && artist.value ? `Stream ${song.value.title} by ${artist.value.name} on Daft.fm` : 'Song information',
-  ogImage: () => albumCoverArt.value[0] || '/og-image.png',
-  ogUrl: canonicalUrl,
-  ogType: 'music.song',
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => song.value && artist.value ? `${song.value.title} by ${artist.value.name}` : 'Song',
-  twitterDescription: () => song.value && artist.value ? `Listen on Daft.fm` : 'Song information',
-  twitterImage: () => albumCoverArt.value[0] || '/og-image.png'
-})
+const seoMeta = computed(() => 
+  generateSeoMeta('song', {
+    title: song.value?.title,
+    artistName: artist.value?.name,
+    albumTitle: album.value?.title,
+    year: song.value?.releaseDate ? new Date(song.value.releaseDate).getFullYear() : undefined,
+    duration: song.value?.duration,
+    images: albumCoverArt.value,
+    path: `/songs/${route.params.slug}`
+  })
+)
+
+useSeoMeta(seoMeta)
 
 // Add canonical URL
 useHead({

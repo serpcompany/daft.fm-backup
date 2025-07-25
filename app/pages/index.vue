@@ -34,29 +34,21 @@
 </template>
 
 <script setup lang="ts">
-// SEO Meta tags
-const canonicalUrl = 'https://daft.fm/'
+import { generateSeoMeta, buildCanonicalUrl } from '~/utils/seo'
 
-useSeoMeta({
-  title: 'Daft.fm - Music Database | Artists, Albums & Songs',
-  description: 'Explore a comprehensive music database featuring artists, albums, and songs. Discover new music, browse complete discographies, and find detailed information.',
-  ogTitle: 'Daft.fm - Music Database',
-  ogDescription: 'Explore a comprehensive music database featuring artists, albums, and songs.',
-  ogImage: '/og-image.png',
-  ogUrl: canonicalUrl,
-  ogType: 'website',
-  twitterCard: 'summary_large_image',
-  twitterTitle: 'Daft.fm - Music Database',
-  twitterDescription: 'Explore artists, albums, and songs',
-  twitterImage: '/og-image.png'
+// Generate SEO meta tags using templates
+const seoMeta = generateSeoMeta('home', {
+  path: '/'
 })
+
+useSeoMeta(seoMeta)
 
 // Add canonical URL
 useHead({
   link: [
     {
       rel: 'canonical',
-      href: canonicalUrl
+      href: buildCanonicalUrl('/')
     }
   ]
 })

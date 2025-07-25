@@ -199,28 +199,24 @@ function formatDate(dateString: string | Date | number): string {
   })
 }
 
-// Dynamic SEO meta tags
-const canonicalUrl = computed(() => `https://daft.fm/albums/${route.params.slug}`)
+import { generateSeoMeta, buildCanonicalUrl } from '~/utils/seo'
 
-useSeoMeta({
-  title: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name} | Daft.fm` : 'Album | Daft.fm',
-  description: () => {
-    if (!album.value || !artist.value) return 'Album information on Daft.fm'
-    const year = album.value.releaseDate ? ` (${formatYear(album.value.releaseDate)})` : ''
-    const tracks = album.value.trackCount ? `, ${album.value.trackCount} tracks` : ''
-    const duration = totalDuration.value ? `, ${formatDuration(totalDuration.value)} total` : ''
-    return `Listen to ${album.value.title} by ${artist.value.name}${year}${tracks}${duration}. Full track listing on Daft.fm.`.substring(0, 160)
-  },
-  ogTitle: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name} | Daft.fm` : 'Album | Daft.fm',
-  ogDescription: () => album.value && artist.value ? `Explore ${album.value.title} by ${artist.value.name} on Daft.fm` : 'Album information',
-  ogImage: () => albumCoverArt.value[0] || '/og-image.png',
-  ogUrl: canonicalUrl,
-  ogType: 'music.album',
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => album.value && artist.value ? `${album.value.title} by ${artist.value.name}` : 'Album',
-  twitterDescription: () => album.value && artist.value ? `Listen on Daft.fm` : 'Album information',
-  twitterImage: () => albumCoverArt.value[0] || '/og-image.png'
-})
+// Dynamic SEO meta tags
+const canonicalUrl = computed(() => buildCanonicalUrl(`/albums/${route.params.slug}`))
+
+const seoMeta = computed(() => 
+  generateSeoMeta('album', {
+    title: album.value?.title,
+    artistName: artist.value?.name,
+    year: album.value?.releaseDate ? new Date(album.value.releaseDate).getFullYear() : undefined,
+    trackCount: album.value?.trackCount,
+    duration: totalDuration.value,
+    images: albumCoverArt.value,
+    path: `/albums/${route.params.slug}`
+  })
+)
+
+useSeoMeta(seoMeta)
 
 // Add canonical URL
 useHead({

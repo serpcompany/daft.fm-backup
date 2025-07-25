@@ -212,27 +212,23 @@ function formatYear(dateString: string | Date | number): string {
   return date.getFullYear().toString()
 }
 
-// Dynamic SEO meta tags
-const canonicalUrl = computed(() => `https://daft.fm/artists/${route.params.slug}`)
+import { generateSeoMeta, buildCanonicalUrl } from '~/utils/seo'
 
-useSeoMeta({
-  title: () => artist.value ? `${artist.value.name} - Artist | Daft.fm` : 'Artist | Daft.fm',
-  description: () => {
-    if (!artist.value) return 'Artist information on Daft.fm'
-    const country = artist.value.country ? ` from ${artist.value.country}` : ''
-    const year = artist.value.formedYear ? ` (formed ${artist.value.formedYear})` : ''
-    const genres = artistGenres.value.length > 0 ? `. Genre: ${artistGenres.value.slice(0, 3).join(', ')}` : ''
-    return `Learn about ${artist.value.name}${country}${year}${genres}. Browse albums, songs, and more on Daft.fm.`.substring(0, 160)
-  },
-  ogTitle: () => artist.value ? `${artist.value.name} - Artist | Daft.fm` : 'Artist | Daft.fm',
-  ogDescription: () => artist.value ? `Explore ${artist.value.name}'s music, albums, and songs on Daft.fm` : 'Artist information',
-  ogImage: () => artistImages.value[0] || '/og-image.png',
-  ogUrl: canonicalUrl,
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => artist.value ? `${artist.value.name} - Artist | Daft.fm` : 'Artist | Daft.fm',
-  twitterDescription: () => artist.value ? `Explore ${artist.value.name}'s music on Daft.fm` : 'Artist information',
-  twitterImage: () => artistImages.value[0] || '/og-image.png'
-})
+// Dynamic SEO meta tags
+const canonicalUrl = computed(() => buildCanonicalUrl(`/artists/${route.params.slug}`))
+
+const seoMeta = computed(() => 
+  generateSeoMeta('artist', {
+    name: artist.value?.name,
+    country: artist.value?.country,
+    formedYear: artist.value?.formedYear,
+    genres: artistGenres.value,
+    images: artistImages.value,
+    path: `/artists/${route.params.slug}`
+  })
+)
+
+useSeoMeta(seoMeta)
 
 // Add canonical URL
 useHead({
