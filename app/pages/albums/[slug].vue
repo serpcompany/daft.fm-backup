@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="py-8">
+  <div class="py-8">
     <div v-if="pending">
       <USkeleton class="h-10 w-2/3 mb-4" />
       <USkeleton class="h-6 w-1/3 mb-8" />
@@ -53,6 +53,16 @@
                 {{ formatDuration(totalDuration) }} total
               </span>
             </div>
+            
+            <div v-if="albumGenres.length > 0" class="mt-4 flex flex-wrap gap-2">
+              <span 
+                v-for="genre in albumGenres" 
+                :key="genre"
+                class="px-3 py-1 bg-gray-100 rounded-full text-sm"
+              >
+                {{ genre }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -77,6 +87,17 @@
                 {{ formatDuration(song.duration) }}
               </span>
             </NuxtLink>
+          </div>
+        </UCard>
+
+        <!-- Credits -->
+        <UCard v-if="albumCredits && albumCredits.length > 0">
+          <h2 class="text-2xl font-semibold mb-4">Credits</h2>
+          <div class="space-y-3">
+            <div v-for="credit in albumCredits" :key="`${credit.name}-${credit.roles.join('-')}`" class="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+              <span class="font-medium text-gray-900 sm:w-1/3">{{ credit.name }}</span>
+              <span class="text-gray-600 sm:w-2/3">{{ credit.roles.join(', ') }}</span>
+            </div>
           </div>
         </UCard>
 
@@ -107,7 +128,7 @@
         </div>
       </UCard>
     </div>
-  </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -172,8 +193,19 @@ const externalLinks = computed(() => {
     if (ids.apple_music_album_id) {
       links.push({ service: 'Apple Music', url: `https://music.apple.com/album/${ids.apple_music_album_id}` })
     }
-    if (ids.discogs_master_id) {
-      links.push({ service: 'Discogs', url: `https://www.discogs.com/master/${ids.discogs_master_id}` })
+    if (ids.discogs_release_id || ids.discogs_master_id) {
+      const discogsId = ids.discogs_release_id || ids.discogs_master_id
+      const discogsType = ids.discogs_release_id ? 'release' : 'master'
+      links.push({ service: 'Discogs', url: `https://www.discogs.com/${discogsType}/${discogsId}` })
+    }
+    if (ids.bandcamp_album_id) {
+      links.push({ service: 'Bandcamp', url: `https://bandcamp.com/album/${ids.bandcamp_album_id}` })
+    }
+    if (ids.youtube_playlist) {
+      links.push({ service: 'YouTube', url: `https://youtube.com/playlist?list=${ids.youtube_playlist}` })
+    }
+    if (ids.lastfm_album_url) {
+      links.push({ service: 'Last.fm', url: ids.lastfm_album_url })
     }
     if (album.value.id) {
       links.push({ service: 'MusicBrainz', url: `https://musicbrainz.org/release-group/${album.value.id}` })
@@ -280,6 +312,35 @@ useHead({
       }).value
     }
   ]
+})
+
+// Parse album genres
+const albumGenres = computed(() => {
+  if (!album.value?.genres) return []
+  try {
+    return JSON.parse(album.value.genres)
+  } catch (e) {
+    return []
+  }
+})
+
+// Parse album credits
+const albumCredits = computed(() => {
+  if (!album.value?.credits) return []
+  try {
+    const parsed = JSON.parse(album.value.credits)
+    // Handle both array format and object format for backwards compatibility
+    if (Array.isArray(parsed)) {
+      return parsed
+    }
+    // Convert object format to array format
+    return Object.entries(parsed).map(([name, roles]) => ({
+      name,
+      roles: Array.isArray(roles) ? roles : [roles]
+    }))
+  } catch (e) {
+    return []
+  }
 })
 
 function formatYear(dateString: string | Date | number): string {

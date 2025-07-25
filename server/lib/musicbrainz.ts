@@ -60,8 +60,9 @@ const MBArtistSchema = z.object({
 const MBReleaseGroupSchema = z.object({
   id: z.string(),
   title: z.string(),
-  'primary-type': z.string().optional(),
-  'first-release-date': z.string().optional(),
+  'primary-type': z.string().nullish(),
+  'secondary-types': z.array(z.string()).optional(),
+  'first-release-date': z.string().nullish(),
   disambiguation: z.string().optional(),
   relations: z.array(z.any()).optional()
 });
@@ -72,6 +73,32 @@ const MBRecordingSchema = z.object({
   length: z.number().nullish(),
   disambiguation: z.string().optional(),
   relations: z.array(z.any()).optional()
+});
+
+// Schema for releases (actual album editions with track listings)
+const MBReleaseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  date: z.string().optional(),
+  'release-group': z.object({
+    id: z.string(),
+    title: z.string()
+  }).optional(),
+  media: z.array(z.object({
+    format: z.string().nullish(),
+    'track-count': z.number(),
+    tracks: z.array(z.object({
+      id: z.string(),
+      position: z.number(),
+      title: z.string(),
+      length: z.number().nullish(),
+      recording: z.object({
+        id: z.string(),
+        title: z.string(),
+        length: z.number().nullish()
+      })
+    })).optional()
+  })).optional()
 });
 
 // Artist search and lookup
@@ -114,6 +141,20 @@ export async function getReleaseGroup(mbid: string, includes: string[] = []) {
   const url = `${MUSICBRAINZ_BASE_URL}/release-group/${mbid}?fmt=json${includeStr}`;
   const data = await rateLimitedFetch(url);
   return MBReleaseGroupSchema.parse(data);
+}
+
+// Get releases for a release group (to fetch actual track listings)
+export async function getReleaseGroupReleases(releaseGroupMbid: string) {
+  const url = `${MUSICBRAINZ_BASE_URL}/release?release-group=${releaseGroupMbid}&fmt=json&inc=recordings`;
+  const data = await rateLimitedFetch(url);
+  return z.object({ releases: z.array(MBReleaseSchema) }).parse(data);
+}
+
+// Get a specific release with full track listing
+export async function getRelease(releaseMbid: string) {
+  const url = `${MUSICBRAINZ_BASE_URL}/release/${releaseMbid}?fmt=json&inc=recordings`;
+  const data = await rateLimitedFetch(url);
+  return MBReleaseSchema.parse(data);
 }
 
 // Recording (song) lookup

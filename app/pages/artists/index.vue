@@ -1,6 +1,5 @@
 <template>
   <div>
-    <UContainer>
       <UPage>
         <UPageHeader 
           title="Artists"
@@ -60,7 +59,6 @@
           </div>
         </UPageBody>
       </UPage>
-    </UContainer>
   </div>
 </template>
 

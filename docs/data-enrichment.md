@@ -1,11 +1,109 @@
+
+## Phase 1: MusicBrainz Collection (`collect-top-artists.ts`)
+
+### What We Get:
+- Artists: ID, name, country, formed year, basic genres (from tags), external links
+- Albums: ID, title, release date, track count
+- Songs: ID, title, duration, track position
+
+### What's Missing:
+- Artist members, bios, images
+- Album genres, credits, cover art
+- Song lyrics, credits, annotations
+
+## Phase 2: Data Enrichment (`enrich-data.ts`)
+
+### Cover Art Archive (Free, no API key needed)
+- Album cover art images
+- Multiple sizes available
+- Direct integration with MusicBrainz IDs
+
+### Last.fm API (Requires API key)
+- Enhanced genre tags
+- Artist images
+- Artist bios
+- Play counts and popularity metrics
+
+### Discogs API (Requires authentication)
+- Detailed credits (producers, engineers, musicians)
+- Additional release information
+- Record label data
+
+### Genius API (Requires API key)
+- Song lyrics
+- Annotations and explanations
+- Song credits
+
+### Wikipedia/Wikidata (Free)
+- Artist biographies
+- Band members
+- Historical information
+
+### Spotify Web API (Requires app registration)
+- Popularity scores
+- Audio features (tempo, key, energy)
+- Related artists
+
+## Implementation Notes
+
+### Rate Limiting
+- MusicBrainz: 1 request per second
+- Cover Art Archive: No official limit, be respectful
+- Last.fm: 5 requests per second
+- Discogs: 60 requests per minute
+- Genius: 100 requests per hour
+
+### Data Storage
+- JSON fields for arrays (genres, members, images)
+- JSON objects for credits and external IDs
+- Nullable fields for data we might not have
+
+### URL Slug Generation
+- Clean slugs for SEO-friendly URLs
+- Deduplication strategy for conflicts
+- Separate urlSlug field for uniqueness
+
+## Running the Scripts
+
+```bash
+# Step 1: Collect initial data from MusicBrainz
+pnpm tsx scripts/collect-top-artists.ts
+
+# Step 2: Enrich with additional sources
+pnpm tsx scripts/enrich-data.ts
+
+# Optional: Search for specific artists
+pnpm tsx scripts/search-musicbrainz.ts
+```
+
+## API Keys Required
+
+For full enrichment, you'll need:
+- Last.fm API key
+- Discogs API credentials
+- Genius API key
+- Spotify app credentials
+
+Store these in `.env.local`:
+```env
+LASTFM_API_KEY=your_key_here
+DISCOGS_TOKEN=your_token_here
+GENIUS_ACCESS_TOKEN=your_token_here
+SPOTIFY_CLIENT_ID=your_id_here
+SPOTIFY_CLIENT_SECRET=your_secret_here
+```
+
+
+# Data Enrichment
+
 # Data Enrichment Plan for Daft.fm
 
 ## Current State Analysis
 
 ### Existing Entities
-1. **Artists** - Basic info (name, country, year, bio, genres, images)
-2. **Albums** - Basic info (title, artist, release date, track count, cover art)
-3. **Songs** - Basic info (title, artist, album, duration, lyrics, annotations)
+1. Artists - Basic info (name, country, year, bio, genres, images)
+2. Albums - Basic info (title, artist, release date, track count, cover art)
+3. Songs - Basic info (title, artist, album, duration, lyrics, annotations)
 
 ### Missing Data & Opportunities
 
@@ -219,18 +317,18 @@ Create a comprehensive credits system for each track:
 ## Data Sources
 
 ### APIs to Integrate:
-1. **Spotify API** - Audio features, popularity metrics
-2. **Genius API** - Lyrics, annotations, artist bios
-3. **Last.fm API** - Tags, similar artists, play counts
-4. **Discogs API** - Detailed credits, release variations
-5. **MusicBrainz API** - Comprehensive metadata
-6. **Setlist.fm API** - Live performance data
-7. **TheAudioDB** - Additional metadata, images
+1. Spotify API - Audio features, popularity metrics
+2. Genius API - Lyrics, annotations, artist bios
+3. Last.fm API - Tags, similar artists, play counts
+4. Discogs API - Detailed credits, release variations
+5. MusicBrainz API - Comprehensive metadata
+6. Setlist.fm API - Live performance data
+7. TheAudioDB - Additional metadata, images
 
 ### Scraping Targets:
-1. **WhoSampled** - Sample connections
-2. **RateYourMusic** - Genre descriptions, user lists
-3. **AllMusic** - Credits, reviews, biography
+1. WhoSampled - Sample connections
+2. RateYourMusic - Genre descriptions, user lists
+3. AllMusic - Credits, reviews, biography
 
 ## Database Impact
 

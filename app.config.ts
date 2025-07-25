@@ -8,5 +8,10 @@ export default defineAppConfig({
     identity: {
       type: 'Organization'
     }
+  },
+  ui: {
+    container: {
+      constrained: 'max-w-[1200px]'
+    }
   }
 })

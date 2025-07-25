@@ -10,6 +10,7 @@ export const artists = sqliteTable('artists', {
   country: text('country'),
   formedYear: integer('formed_year'),
   genres: text('genres'), // JSON array stored as text
+  members: text('members'), // JSON array of member names
   bio: text('bio'), // Nullable - from Discogs (high word count)
   images: text('images'), // Nullable - JSON array of image URLs from multiple sources
   wikidataId: text('wikidata_id'), // Key reconciliation identifier
@@ -25,7 +26,9 @@ export const albums = sqliteTable('albums', {
   artistId: text('artist_id').notNull().references(() => artists.id),
   releaseDate: integer('release_date', { mode: 'timestamp' }),
   trackCount: integer('track_count'),
+  genres: text('genres'), // JSON array stored as text
   coverArt: text('cover_art'), // Nullable - JSON array of cover art URLs from multiple sources
+  credits: text('credits'), // JSON object of credits (producer, engineer, etc.)
   wikidataId: text('wikidata_id'), // Key reconciliation identifier
   externalIds: text('external_ids'), // JSON object: {freebase_id, discogs_master_id, spotify_album_id, etc.}
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
@@ -42,6 +45,7 @@ export const songs = sqliteTable('songs', {
   releaseDate: integer('release_date', { mode: 'timestamp' }),
   lyrics: text('lyrics'), // Nullable - from Genius API
   annotations: text('annotations'), // Nullable - from Genius API (high word count)
+  credits: text('credits'), // JSON object of song credits (writer, producer, etc.)
   isrc: text('isrc'), // Key reconciliation identifier for songs
   wikidataId: text('wikidata_id'), // Key reconciliation identifier
   externalIds: text('external_ids'), // JSON object: {freebase_id, genius_song_id, spotify_track_id, etc.}

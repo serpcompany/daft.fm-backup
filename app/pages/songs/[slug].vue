@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="py-8">
+  <div class="py-8">
     <div v-if="pending">
       <USkeleton class="h-8 w-1/2 mb-4" />
       <USkeleton class="h-6 w-1/3 mb-8" />
@@ -90,6 +90,17 @@
           <div class="whitespace-pre-wrap">{{ song.lyrics }}</div>
         </UCard>
 
+        <!-- Credits -->
+        <UCard v-if="songCredits && songCredits.length > 0">
+          <h3 class="text-xl font-semibold mb-4">Credits</h3>
+          <div class="space-y-3">
+            <div v-for="credit in songCredits" :key="`${credit.name}-${credit.roles.join('-')}`" class="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+              <span class="font-medium text-gray-900 sm:w-1/3">{{ credit.name }}</span>
+              <span class="text-gray-600 sm:w-2/3">{{ credit.roles.join(', ') }}</span>
+            </div>
+          </div>
+        </UCard>
+
         <!-- Annotations -->
         <UCard v-if="song.annotations">
           <h3 class="text-xl font-semibold mb-4">Annotations</h3>
@@ -123,7 +134,7 @@
         </div>
       </UCard>
     </div>
-  </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -217,6 +228,25 @@ const artistGenres = computed(() => {
   if (!artist.value?.genres) return []
   try {
     return JSON.parse(artist.value.genres)
+  } catch (e) {
+    return []
+  }
+})
+
+// Parse song credits
+const songCredits = computed(() => {
+  if (!song.value?.credits) return []
+  try {
+    const parsed = JSON.parse(song.value.credits)
+    // Handle both array format and object format for backwards compatibility
+    if (Array.isArray(parsed)) {
+      return parsed
+    }
+    // Convert object format to array format
+    return Object.entries(parsed).map(([name, roles]) => ({
+      name,
+      roles: Array.isArray(roles) ? roles : [roles]
+    }))
   } catch (e) {
     return []
   }

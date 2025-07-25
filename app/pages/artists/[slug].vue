@@ -1,5 +1,5 @@
 <template>
-  <UContainer class="py-8">
+  <div class="py-8">
     <div v-if="pending">
       <USkeleton class="h-10 w-1/2 mb-4" />
       <USkeleton class="h-6 w-1/3 mb-8" />
@@ -22,8 +22,9 @@
         <h1 class="text-5xl font-bold mb-4">{{ artist.name }}</h1>
         
         <div class="flex flex-wrap gap-4 text-lg text-gray-600">
-          <span v-if="artist.country">{{ artist.country }}</span>
+          <span v-if="artist.country">From {{ artist.country }}</span>
           <span v-if="artist.formedYear">Formed {{ artist.formedYear }}</span>
+          <span v-if="artistMembers.length > 0">{{ artistMembers.length }} members</span>
         </div>
         
         <div v-if="artistGenres.length > 0" class="mt-4 flex flex-wrap gap-2">
@@ -50,10 +51,28 @@
           />
         </div>
 
+        <!-- Members -->
+        <UCard v-if="artistMembers.length > 0">
+          <h2 class="text-2xl font-semibold mb-4">Members</h2>
+          <div class="flex flex-wrap gap-2">
+            <span 
+              v-for="member in artistMembers" 
+              :key="member"
+              class="px-3 py-1 bg-gray-100 rounded-full"
+            >
+              {{ member }}
+            </span>
+          </div>
+        </UCard>
+
         <!-- Bio -->
         <UCard v-if="artist.bio">
           <h2 class="text-2xl font-semibold mb-4">Biography</h2>
-          <div class="prose max-w-none">{{ artist.bio }}</div>
+          <div class="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+            <p v-for="(paragraph, index) in artist.bio.split('\n\n')" :key="index" class="text-base">
+              {{ paragraph }}
+            </p>
+          </div>
         </UCard>
 
         <!-- Albums -->
@@ -129,7 +148,7 @@
         </div>
       </UCard>
     </div>
-  </UContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -165,6 +184,16 @@ const artistGenres = computed(() => {
   }
 })
 
+// Parse artist members
+const artistMembers = computed(() => {
+  if (!artist.value?.members) return []
+  try {
+    return JSON.parse(artist.value.members)
+  } catch (e) {
+    return []
+  }
+})
+
 // Parse artist images
 const artistImages = computed(() => {
   if (!artist.value?.images) return []
@@ -189,8 +218,26 @@ const externalLinks = computed(() => {
     if (ids.apple_music_id) {
       links.push({ service: 'Apple Music', url: `https://music.apple.com/artist/${ids.apple_music_id}` })
     }
-    if (ids.discogs_artist_id) {
-      links.push({ service: 'Discogs', url: `https://www.discogs.com/artist/${ids.discogs_artist_id}` })
+    if (ids.discogs_id || ids.discogs_artist_id) {
+      links.push({ service: 'Discogs', url: `https://www.discogs.com/artist/${ids.discogs_id || ids.discogs_artist_id}` })
+    }
+    if (ids.bandcamp_url) {
+      links.push({ service: 'Bandcamp', url: ids.bandcamp_url })
+    }
+    if (ids.soundcloud_url) {
+      links.push({ service: 'SoundCloud', url: ids.soundcloud_url })
+    }
+    if (ids.lastfm_url) {
+      links.push({ service: 'Last.fm', url: ids.lastfm_url })
+    }
+    if (ids.youtube_channel) {
+      links.push({ service: 'YouTube', url: `https://youtube.com/channel/${ids.youtube_channel}` })
+    }
+    if (ids.instagram) {
+      links.push({ service: 'Instagram', url: `https://instagram.com/${ids.instagram.replace('@', '')}` })
+    }
+    if (ids.twitter) {
+      links.push({ service: 'Twitter', url: `https://twitter.com/${ids.twitter.replace('@', '')}` })
     }
     if (artist.value.id) {
       links.push({ service: 'MusicBrainz', url: `https://musicbrainz.org/artist/${artist.value.id}` })
