@@ -1,16 +1,12 @@
-// GET /api/songs - List songs with pagination, search, and filtering  
-
-import { getSongs, getSongsWithArtists, searchSongs, getSongsByArtist, getSongsByAlbum } from '../../lib/queries'
 import { createDb } from '../../database/db'
-import { songListResponseSchema, songWithDetailsSchema } from '../../types/schemas'
+import { songs, artists, albums } from '../../database/schema'
+import { desc, eq, sql } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const page = Math.max(1, parseInt((query.page as string) || '1'))
-  const limit = Math.min(100, Math.max(1, parseInt((query.limit as string) || '20')))
-  const search = query.search as string
-  const artistId = query.artistId as string
-  const albumId = query.albumId as string
+  const page = Number(query.page) || 1
+  const limit = Number(query.limit) || 50
+  const offset = (page - 1) * limit
 
   // Get D1 database instance from Cloudflare binding
   const d1 = event.context.cloudflare?.env?.DB
@@ -24,63 +20,51 @@ export default defineEventHandler(async (event) => {
   const db = createDb(d1)
 
   try {
-    let songs
-    let hasMore = false
+    // Get total count
+    const totalResult = await db.select({ count: sql<number>`count(*)` })
+      .from(songs)
+      .get()
+    
+    const total = totalResult?.count || 0
 
-    if (search && search.trim()) {
-      // Search for songs
-      const results = await searchSongs(db, search.trim(), limit, (page - 1) * limit)
-      songs = results
-      hasMore = results.length === limit
-    } else if (albumId) {
-      // Get songs by specific album
-      const results = await getSongsByAlbum(db, albumId, limit, (page - 1) * limit)
-      songs = results
-      hasMore = results.length === limit
-    } else if (artistId) {
-      // Get songs by specific artist
-      const results = await getSongsByArtist(db, artistId, limit, (page - 1) * limit)
-      songs = results
-      hasMore = results.length === limit
-    } else {
-      // Get paginated list of all songs with artist names
-      const results = await getSongsWithArtists(db, limit, (page - 1) * limit)
-      songs = results
-      hasMore = results.length === limit
-    }
+    // Get paginated songs with artist and album info
+    const songsData = await db.select({
+      song: songs,
+      artist: artists,
+      album: albums
+    })
+      .from(songs)
+      .leftJoin(artists, eq(songs.artistId, artists.id))
+      .leftJoin(albums, eq(songs.albumId, albums.id))
+      .orderBy(desc(songs.createdAt))
+      .limit(limit)
+      .offset(offset)
+      .all()
 
-    // The data from getSongsWithArtists already includes the joined fields
-    const mappedSongs = songs
+    // Format the response - flatten artist and album info for frontend
+    const formattedSongs = songsData.map(({ song, artist, album }) => ({
+      ...song,
+      artistName: artist?.name || 'Unknown Artist',
+      artistSlug: artist?.slug || 'unknown',
+      albumTitle: album?.title || null,
+      albumSlug: album?.slug || null
+    }))
 
-    const response = {
-      success: true,
-      data: mappedSongs,
+    return {
+      data: formattedSongs,
       pagination: {
         page,
         limit,
-        hasMore,
-        total: mappedSongs.length === limit ? 'unknown' : mappedSongs.length
-      },
-      filters: {
-        search: search || null,
-        artistId: artistId || null,
-        albumId: albumId || null
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     }
-
-    // For now, skip validation to get the app working
-    // TODO: Fix schema to match actual data structure
-    return response
   } catch (error) {
-    console.error('Error fetching songs:', error)
-    // Log more details in development
-    if (process.dev && error instanceof Error) {
-      console.error('Error details:', error.message)
-      console.error('Stack:', error.stack)
-    }
+    console.error('Error in songs API:', error)
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch songs'
+      statusMessage: 'Failed to fetch songs',
+      data: error
     })
   }
 })

@@ -4,7 +4,7 @@
 
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, isNull } from 'drizzle-orm';
-import { artists, albums, songs } from '../server/database/schema';
+import { artists, albums, songs } from '../../server/database/schema';
 import dotenv from 'dotenv';
 
 // Load environment variables

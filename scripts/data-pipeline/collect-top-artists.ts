@@ -5,14 +5,14 @@
 
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import { artists, albums, songs } from '../server/database/schema';
+import { artists, albums, songs } from '../../server/database/schema';
 import { 
   searchArtists, 
   getArtist, 
   getArtistReleaseGroups,
   getReleaseGroupReleases,
   createSlug 
-} from '../server/lib/musicbrainz';
+} from '../../server/lib/musicbrainz';
 
 // For local development, we'll use better-sqlite3
 import Database from 'better-sqlite3';
@@ -104,7 +104,6 @@ async function collectTopArtists() {
       
       // Insert artist
       const artistData = {
-        id: artist.id,
         name: artist.name,
         slug: createSlug(artist.name),
         urlSlug: createSlug(artist.name), // Will need deduplication logic later
@@ -114,13 +113,21 @@ async function collectTopArtists() {
         members: null, // MusicBrainz doesn't provide band members directly
         bio: null, // Will need to fetch from another source
         images: null, // Will need to fetch from another source
-        wikidataId: null, // Could extract from relationships
+        musicbrainzId: artist.id, // Store MusicBrainz ID in dedicated field
+        wikidataId: enrichment.externalIds.wikidata_id || null,
         externalIds: JSON.stringify(enrichment.externalIds),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
       
-      await db.insert(artists).values(artistData).onConflictDoNothing();
+      const insertedArtist = await db.insert(artists).values(artistData).onConflictDoNothing().returning();
+      
+      if (!insertedArtist || insertedArtist.length === 0) {
+        console.log(`  ⏭️ Artist already exists: ${artist.name}`);
+        continue;
+      }
+      
+      const dbArtist = insertedArtist[0];
       console.log(`  ✓ Inserted artist: ${artist.name}`);
       
       // Get albums (release groups)
@@ -166,10 +173,9 @@ async function collectTopArtists() {
           
           // Insert album
           const albumData = {
-            id: releaseGroup.id,
             title: releaseGroup.title,
             slug: createSlug(releaseGroup.title),
-            artistId: artist.id,
+            artistId: dbArtist.id, // Use our own artist ID
             releaseDate: releaseGroup['first-release-date'] 
               ? new Date(releaseGroup['first-release-date']) 
               : null,
@@ -177,13 +183,21 @@ async function collectTopArtists() {
             genres: albumEnrichment.genres.length > 0 ? JSON.stringify(albumEnrichment.genres) : null,
             coverArt: null, // Will need Cover Art Archive API
             credits: null, // Will need Discogs API
+            musicbrainzId: releaseGroup.id, // Store MusicBrainz ID in dedicated field
             wikidataId: null,
             externalIds: JSON.stringify(albumEnrichment.externalIds),
             createdAt: new Date(),
             updatedAt: new Date(),
           };
           
-          await db.insert(albums).values(albumData).onConflictDoNothing();
+          const insertedAlbum = await db.insert(albums).values(albumData).onConflictDoNothing().returning();
+          
+          if (!insertedAlbum || insertedAlbum.length === 0) {
+            console.log(`    ⏭️ Album already exists: ${releaseGroup.title}`);
+            continue;
+          }
+          
+          const dbAlbum = insertedAlbum[0];
           console.log(`    ✓ Inserted album: ${releaseGroup.title}`);
           
           // Process tracks from the primary release
@@ -192,16 +206,16 @@ async function collectTopArtists() {
               const recording = track.recording;
               
               const songData = {
-                id: recording.id,
                 title: recording.title,
                 slug: createSlug(recording.title),
                 duration: recording.length ? Math.floor(recording.length / 1000) : null, // Convert ms to seconds
-                artistId: artist.id,
-                albumId: releaseGroup.id,
+                artistId: dbArtist.id, // Use our own artist ID
+                albumId: dbAlbum.id, // Use our own album ID
                 releaseDate: albumData.releaseDate,
                 lyrics: null, // Would need Genius API
                 annotations: null, // Would need Genius API
                 credits: null, // Would need Discogs API
+                musicbrainzId: recording.id, // Store MusicBrainz ID in dedicated field
                 isrc: null, // Not provided by MusicBrainz basic API
                 wikidataId: null,
                 externalIds: JSON.stringify({}),

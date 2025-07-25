@@ -2,7 +2,7 @@
 // Search for MusicBrainz IDs for our albums
 // Run with: pnpm tsx scripts/search-musicbrainz.ts
 
-import { searchArtists, getArtistReleaseGroups } from '../server/lib/musicbrainz'
+import { searchArtists, getArtistReleaseGroups } from '../../server/lib/musicbrainz'
 
 const ARTISTS_TO_SEARCH = [
   { name: 'Daft Punk', albums: ['Discovery', 'Random Access Memories'] },

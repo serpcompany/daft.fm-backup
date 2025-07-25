@@ -10,7 +10,7 @@
 
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import { artists, albums, songs } from '../server/database/schema';
+import { artists, albums, songs } from '../../server/database/schema';
 
 // For local development
 import Database from 'better-sqlite3';
