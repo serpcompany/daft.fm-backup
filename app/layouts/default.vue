@@ -46,7 +46,7 @@
             <div>
               <h3 class="font-bold text-lg mb-4">DAFT.FM</h3>
               <p class="text-gray-600 dark:text-gray-400 text-sm">
-                A comprehensive music database featuring artists, albums, and songs.
+                
               </p>
             </div>
             

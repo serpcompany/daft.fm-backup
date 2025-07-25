@@ -1,18 +1,6 @@
 <template>
   <div>
-    <!-- Full-width hero section -->
-    <template #hero>
-      <div class="bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <div class="px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h1 class="text-5xl md:text-6xl font-bold mb-6">Welcome to DAFT.FM</h1>
-          <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Explore our comprehensive music database featuring thousands of artists, albums, and songs
-          </p>
-        </div>
-      </div>
-    </template>
-
-    <!-- Main content - constrained width -->
+    <!-- Main content -->
     <div class="py-12">
       <div class="grid gap-8 md:grid-cols-3 mb-16">
         <UCard>
