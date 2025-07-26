@@ -1,0 +1,15 @@
+# Ignore large directories that don't need watching
+scripts/
+.wrangler/tmp/
+.wrangler/state/v3/cache/
+.git/
+data/
+docs/
+**/*.log
+**/*.sqlite
+**/*.db
+**/*.md
+node_modules/
+.nuxt/
+.output/
+dist/
