@@ -8,10 +8,16 @@
       </template>
 
       <template #right>
-        <UHeaderLinks 
-          :links="navigationLinks"
-          class="hidden lg:flex gap-8"
-        />
+        <nav class="hidden lg:flex items-center gap-8">
+          <NuxtLink 
+            v-for="link in navigationLinks"
+            :key="link.to"
+            :to="link.to"
+            class="text-gray-700 dark:text-gray-200 hover:text-primary transition-colors"
+          >
+            {{ link.label }}
+          </NuxtLink>
+        </nav>
         <UButton
           icon="i-heroicons-bars-3"
           variant="ghost"

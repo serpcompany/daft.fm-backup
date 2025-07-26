@@ -6,7 +6,7 @@ import {
   getReleaseGroup, 
   getReleaseGroupReleases, 
   createSlug 
-} from '../server/lib/musicbrainz'
+} from '../../server/lib/musicbrainz'
 
 // Map our fake IDs to real MusicBrainz IDs
 const ALBUM_MAPPINGS = {

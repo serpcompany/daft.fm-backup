@@ -4,14 +4,14 @@
 
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import { artists, albums, songs } from '../server/database/schema';
+import { artists, albums, songs } from '../../server/database/schema';
 import { 
   searchArtists, 
   getArtist, 
   getArtistReleaseGroups,
   getReleaseGroupReleases,
   createSlug 
-} from '../server/lib/musicbrainz';
+} from '../../server/lib/musicbrainz';
 
 // For local development
 import Database from 'better-sqlite3';
@@ -123,7 +123,6 @@ async function collectTopArtists() {
       
       // Insert artist
       const artistData = {
-        id: artist.id,
         name: artist.name,
         slug: createSlug(artist.name),
         urlSlug: createSlug(artist.name), // TODO: Handle duplicates
@@ -133,13 +132,21 @@ async function collectTopArtists() {
         members: null,
         bio: null,
         images: null,
+        musicbrainzId: artist.id, // Store MusicBrainz ID in dedicated field
         wikidataId: externalIds.wikidata_id || null,
         externalIds: JSON.stringify(externalIds),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
       
-      await db.insert(artists).values(artistData).onConflictDoNothing();
+      const insertedArtist = await db.insert(artists).values(artistData).onConflictDoNothing().returning();
+      
+      if (!insertedArtist || insertedArtist.length === 0) {
+        console.log(`  ⏭️ Artist already exists: ${artist.name}`);
+        continue;
+      }
+      
+      const dbArtist = insertedArtist[0];
       console.log(`  ✓ Added ${artist.name}`);
       successCount++;
       
@@ -169,10 +176,9 @@ async function collectTopArtists() {
           
           // Insert album
           const album = {
-            id: albumData.id,
             title: albumData.title,
             slug: createSlug(albumData.title),
-            artistId: artist.id,
+            artistId: dbArtist.id, // Use our own artist ID
             releaseDate: albumData['first-release-date'] 
               ? new Date(albumData['first-release-date']) 
               : null,
@@ -180,13 +186,21 @@ async function collectTopArtists() {
             genres: genres.length > 0 ? JSON.stringify(genres) : null,
             coverArt: null,
             credits: null,
+            musicbrainzId: albumData.id, // Store MusicBrainz ID in dedicated field
             wikidataId: null,
             externalIds: JSON.stringify({}),
             createdAt: new Date(),
             updatedAt: new Date(),
           };
           
-          await db.insert(albums).values(album).onConflictDoNothing();
+          const insertedAlbum = await db.insert(albums).values(album).onConflictDoNothing().returning();
+          
+          if (!insertedAlbum || insertedAlbum.length === 0) {
+            console.log(`    ⏭️ Album already exists: ${albumData.title}`);
+            continue;
+          }
+          
+          const dbAlbum = insertedAlbum[0];
           console.log(`    ✓ ${albumData.title}`);
           
           // Insert tracks
@@ -195,16 +209,16 @@ async function collectTopArtists() {
               const recording = track.recording;
               
               const songData = {
-                id: recording.id,
                 title: recording.title,
                 slug: createSlug(recording.title),
                 duration: recording.length ? Math.floor(recording.length / 1000) : null,
-                artistId: artist.id,
-                albumId: albumData.id,
+                artistId: dbArtist.id, // Use our own artist ID
+                albumId: dbAlbum.id, // Use our own album ID
                 releaseDate: album.releaseDate,
                 lyrics: null,
                 annotations: null,
                 credits: null,
+                musicbrainzId: recording.id, // Store MusicBrainz ID in dedicated field
                 isrc: null,
                 wikidataId: null,
                 externalIds: JSON.stringify({}),

@@ -31,7 +31,7 @@ export async function getArtistByMbid(db: Database, mbid: string): Promise<Artis
   if (!isValidMbid(mbid)) return null;
   
   try {
-    const result = await db.select().from(artists).where(eq(artists.id, mbid)).limit(1);
+    const result = await db.select().from(artists).where(eq(artists.musicbrainzId, mbid)).limit(1);
     return result[0] || null;
   } catch (error) {
     console.error('Error fetching artist:', error);
@@ -98,7 +98,7 @@ export async function getAlbumByMbid(db: Database, mbid: string): Promise<Album 
   if (!isValidMbid(mbid)) return null;
   
   try {
-    const result = await db.select().from(albums).where(eq(albums.id, mbid)).limit(1);
+    const result = await db.select().from(albums).where(eq(albums.musicbrainzId, mbid)).limit(1);
     return result[0] || null;
   } catch (error) {
     console.error('Error fetching album:', error);
@@ -219,7 +219,7 @@ export async function getSongByMbid(db: Database, mbid: string): Promise<Song | 
   if (!isValidMbid(mbid)) return null;
   
   try {
-    const result = await db.select().from(songs).where(eq(songs.id, mbid)).limit(1);
+    const result = await db.select().from(songs).where(eq(songs.musicbrainzId, mbid)).limit(1);
     return result[0] || null;
   } catch (error) {
     console.error('Error fetching song:', error);

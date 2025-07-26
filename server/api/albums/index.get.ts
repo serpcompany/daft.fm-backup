@@ -1,15 +1,12 @@
-// GET /api/albums - List albums with pagination, search, and filtering
-
-import { getAlbums, getAlbumsWithArtists, searchAlbums, getAlbumsByArtist } from '../../lib/queries'
 import { createDb } from '../../database/db'
-import { albumListResponseSchema } from '../../types/schemas'
+import { albums, artists } from '../../database/schema'
+import { desc, eq, sql } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
-  const page = Math.max(1, parseInt((query.page as string) || '1'))
-  const limit = Math.min(100, Math.max(1, parseInt((query.limit as string) || '20')))
-  const search = query.search as string
-  const artistId = query.artistId as string
+  const page = Number(query.page) || 1
+  const limit = Number(query.limit) || 50
+  const offset = (page - 1) * limit
 
   // Get D1 database instance from Cloudflare binding
   const d1 = event.context.cloudflare?.env?.DB
@@ -23,51 +20,47 @@ export default defineEventHandler(async (event) => {
   const db = createDb(d1)
 
   try {
-    let albums
-    let hasMore = false
+    // Get total count
+    const totalResult = await db.select({ count: sql<number>`count(*)` })
+      .from(albums)
+      .get()
+    
+    const total = totalResult?.count || 0
 
-    if (search && search.trim()) {
-      // Search for albums
-      const results = await searchAlbums(db, search.trim(), limit, (page - 1) * limit)
-      albums = results
-      hasMore = results.length === limit
-    } else if (artistId) {
-      // Get albums by specific artist
-      const results = await getAlbumsByArtist(db, artistId, limit, (page - 1) * limit)
-      albums = results
-      hasMore = results.length === limit
-    } else {
-      // Get paginated list of all albums with artist names
-      const results = await getAlbumsWithArtists(db, limit, (page - 1) * limit)
-      albums = results
-      hasMore = results.length === limit
-    }
+    // Get paginated albums with artist info
+    const albumsData = await db.select({
+      album: albums,
+      artist: artists
+    })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .orderBy(desc(albums.createdAt))
+      .limit(limit)
+      .offset(offset)
+      .all()
 
-    // The data from getAlbumsWithArtists already includes the joined fields
-    const mappedAlbums = albums
+    // Format the response - flatten artist info for frontend
+    const formattedAlbums = albumsData.map(({ album, artist }) => ({
+      ...album,
+      artistName: artist?.name || 'Unknown Artist',
+      artistSlug: artist?.slug || 'unknown'
+    }))
 
-    const response = {
-      success: true,
-      data: mappedAlbums,
+    return {
+      data: formattedAlbums,
       pagination: {
         page,
         limit,
-        hasMore,
-        total: mappedAlbums.length === limit ? 'unknown' : mappedAlbums.length
-      },
-      filters: {
-        search: search || null,
-        artistId: artistId || null
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     }
-
-    // Validate response schema
-    return albumListResponseSchema.parse(response)
   } catch (error) {
-    console.error('Error fetching albums:', error)
+    console.error('Error in albums API:', error)
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch albums'
+      statusMessage: 'Failed to fetch albums',
+      data: error
     })
   }
 })

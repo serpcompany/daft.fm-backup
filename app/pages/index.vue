@@ -9,7 +9,6 @@
         </p>
       </div>
     </div>
-
     <!-- Main content -->
     <div class="py-12">
       <div class="grid gap-8 md:grid-cols-3 mb-16">

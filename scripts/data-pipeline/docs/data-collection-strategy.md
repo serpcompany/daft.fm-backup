@@ -11,7 +11,14 @@
    - skip singles
    - skip compilations
    - etc.
+
+The goal is to end up with the main "album" for the artist, where that album page would contain the tracklist of what is on that album.
+
 3. For Each Album: Get Songs
+
+Get all the songs on that album. We dont want every release of the song, just the canonical/main song associated to the album.
+
+
 4. Extract External IDs From relationship URLs in each entity, extract:
    - Discogs IDs, Genius IDs, Spotify IDs, Wikidata Q-numbers
    - Store for future cross-platform data enrichment

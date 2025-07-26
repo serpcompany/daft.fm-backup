@@ -73,11 +73,9 @@ export const songs = sqliteTable('songs', {
   lyrics: text('lyrics'),
   annotations: text('annotations'),
   credits: text('credits'), // JSON object
-  isInstrumental: integer('is_instrumental', { mode: 'boolean' }).notNull().default(false),
   
   // Entity resolution identifiers
-  musicbrainzId: text('musicbrainz_id').unique(), // Generic MB ID - could be recording, work, etc.
-  musicbrainzRecordingId: text('musicbrainz_recording_id').unique(),
+  musicbrainzId: text('musicbrainz_id').unique(),
   wikidataId: text('wikidata_id'),
   isrc: text('isrc'),
   spotifyTrackId: text('spotify_track_id'),

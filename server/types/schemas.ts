@@ -10,7 +10,7 @@ const dateTransform = z.union([
 
 // Base schemas with proper type handling
 export const artistSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   name: z.string(),
   slug: z.string(),
   urlSlug: z.string(),
@@ -19,38 +19,55 @@ export const artistSchema = z.object({
   genres: z.string().nullable(), // JSON string
   bio: z.string().nullable(),
   images: z.string().nullable(), // JSON string
+  musicbrainzId: z.string().nullable(),
   wikidataId: z.string().nullable(),
+  discogsArtistId: z.string().nullable(),
+  spotifyArtistId: z.string().nullable(),
+  lastfmUrl: z.string().nullable(),
+  isni: z.string().nullable(),
   externalIds: z.string().nullable(), // JSON string
   createdAt: dateTransform,
   updatedAt: dateTransform
 }).passthrough() // Allow extra fields
 
 export const albumSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   title: z.string(),
   slug: z.string(),
-  artistId: z.string(),
+  artistId: z.number(),
   releaseDate: dateTransform,
   trackCount: z.number().nullable(),
+  genres: z.string().nullable(), // JSON string
   coverArt: z.string().nullable(), // JSON string
+  credits: z.string().nullable(), // JSON string
+  musicbrainzId: z.string().nullable(),
   wikidataId: z.string().nullable(),
+  discogsMasterId: z.string().nullable(),
+  spotifyAlbumId: z.string().nullable(),
+  barcode: z.string().nullable(),
+  catalogNumber: z.string().nullable(),
   externalIds: z.string().nullable(), // JSON string
   createdAt: dateTransform,
   updatedAt: dateTransform
 }).passthrough()
 
 export const songSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   title: z.string(),
   slug: z.string(),
   duration: z.number().nullable(),
-  artistId: z.string(),
-  albumId: z.string().nullable(),
+  artistId: z.number(),
+  albumId: z.number().nullable(),
   releaseDate: dateTransform,
   lyrics: z.string().nullable(),
   annotations: z.string().nullable(),
-  isrc: z.string().nullable(),
+  credits: z.string().nullable(), // JSON string
+  musicbrainzId: z.string().nullable(),
   wikidataId: z.string().nullable(),
+  isrc: z.string().nullable(),
+  spotifyTrackId: z.string().nullable(),
+  geniusSongId: z.string().nullable(),
+  acoustid: z.string().nullable(),
   externalIds: z.string().nullable(), // JSON string
   createdAt: dateTransform,
   updatedAt: dateTransform
